@@ -1,0 +1,11 @@
+.vercel
+.firebase/
+functions/
+dataconnect/
+.firebaserc
+firebase.json
+firebase.rules
+firestore.indexes.json
+bun.lockb
+vite.config.ts.timestamp*
+*.log

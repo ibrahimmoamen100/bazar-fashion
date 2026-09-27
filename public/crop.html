@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Logo Cropper</title>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+      padding: 20px;
+    }
+
+    canvas {
+      border: 1px solid #444;
+      margin: 10px;
+      background: #222;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Logo Cropper for Favicon</h1>
+  <div>
+    <h3>Original Image:</h3>
+    <img id="original" src="logo3.png" style="max-height: 100px; border: 1px solid #444;" />
+  </div>
+  <div>
+    <h3>Cropped "BE" Part:</h3>
+    <canvas id="cropCanvas"></canvas>
+  </div>
+  <div>
+    <h3>Final Favicon (with white circle background):</h3>
+    <canvas id="faviconCanvas" width="512" height="512"></canvas>
+  </div>
+  <div>
+    <h3>Base64 Output:</h3>
+    <textarea id="base64-output" readonly></textarea>
+  </div>
+
+  <script>
+    const img = document.getElementById('original');
+    img.onload = function () {
+      // 1. Create a temporary canvas to analyze original image pixels
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = img.naturalWidth;
+      tempCanvas.height = img.naturalHeight;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(img, 0, 0);
+
+      const width = img.naturalWidth;
+      const height = img.naturalHeight;
+      const imgData = tempCtx.getImageData(0, 0, width, height);
+      const data = imgData.data;
+
+      // Helper to check if a pixel is background (transparent or very close to white or whatever)
+      // Since it's transparent or white, let's look at alpha first.
+      // If alpha is 0, or if R,G,B are all 255 (or very close), it's background.
+      function isBackground(x, y) {
+        const idx = (y * width + x) * 4;
+        const r = data[idx];
+        const g = data[idx + 1];
+        const b = data[idx + 2];
+        const a = data[idx + 3];
+        // transparent pixel
+        if (a < 10) return true;
+        // white pixel
+        if (r > 240 && g > 240 && b > 240) return true;
+        return false;
+      }
+
+      // Find the bounding box of the "BE" logo symbol.
+      // The symbol is on the left. We scan columns from left to right.
+      // We search for the first column with non-background pixels, and then find where the gap is.
+      let logoLeft = -1;
+      let logoRight = -1;
+      let logoTop = -1;
+      let logoBottom = -1;
+
+      // Find logoLeft
+      for (let x = 0; x < width; x++) {
+        let hasContent = false;
+        for (let y = 0; y < height; y++) {
+          if (!isBackground(x, y)) {
+            hasContent = true;
+            break;
+          }
+        }
+        if (hasContent) {
+          logoLeft = x;
+          break;
+        }
+      }
+
+      // Now find where the gap is (e.g. a column with all background pixels after logoLeft,
+      // or at least 15 consecutive columns with no/very little content, representing the gap between "BE" and "bazar fashion")
+      let consecGaps = 0;
+      for (let x = logoLeft + 5; x < width; x++) {
+        let hasContent = false;
+        for (let y = 0; y < height; y++) {
+          if (!isBackground(x, y)) {
+            hasContent = true;
+            break;
+          }
+        }
+        if (!hasContent) {
+          consecGaps++;
+          if (consecGaps >= 25) { // gap found
+            logoRight = x - consecGaps;
+            break;
+          }
+        } else {
+          consecGaps = 0;
+        }
+      }
+      if (logoRight === -1) {
+        // Fallback to a reasonable fraction of the image width if no clear gap
+        logoRight = Math.round(width * 0.35);
+      }
+
+      // Now scan the vertical bounding box (top and bottom) within [logoLeft, logoRight]
+      for (let y = 0; y < height; y++) {
+        let hasContent = false;
+        for (let x = logoLeft; x <= logoRight; x++) {
+          if (!isBackground(x, y)) {
+            hasContent = true;
+            break;
+          }
+        }
+        if (hasContent) {
+          if (logoTop === -1) logoTop = y;
+          logoBottom = y;
+        }
+      }
+
+      console.log(`Logo bounds: Left=${logoLeft}, Right=${logoRight}, Top=${logoTop}, Bottom=${logoBottom}`);
+
+      // 2. Draw cropped logo
+      const cropW = logoRight - logoLeft + 1;
+      const cropH = logoBottom - logoTop + 1;
+      const cropCanvas = document.getElementById('cropCanvas');
+      cropCanvas.width = cropW;
+      cropCanvas.height = cropH;
+      const cropCtx = cropCanvas.getContext('2d');
+      cropCtx.drawImage(img, logoLeft, logoTop, cropW, cropH, 0, 0, cropW, cropH);
+
+      // 3. Draw final favicon: 512x512 with a white circle background
+      const faviconCanvas = document.getElementById('faviconCanvas');
+      const ctx = faviconCanvas.getContext('2d');
+
+      // Clear with transparent background
+      ctx.clearRect(0, 0, 512, 512);
+
+      // Draw white circle
+      ctx.beginPath();
+      ctx.arc(256, 256, 240, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+
+      // Add a nice subtle shadow to the circle for premium feel
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+
+      // Draw cropped "BE" centered in the circle
+      // Let's scale it so that it fits nicely.
+      // The target size inside the circle (diameter is 480).
+      // Let's fit the logo within a 310x310 box in the center of the 512x512 canvas.
+      const targetMaxDim = 320;
+      let scale = 1;
+      if (cropW > cropH) {
+        scale = targetMaxDim / cropW;
+      } else {
+        scale = targetMaxDim / cropH;
+      }
+
+      const drawW = cropW * scale;
+      const drawH = cropH * scale;
+      const drawX = 256 - (drawW / 2);
+      const drawY = 256 - (drawH / 2);
+
+      ctx.drawImage(cropCanvas, drawX, drawY, drawW, drawH);
+
+      // 4. Output base64 data URL
+      const base64 = faviconCanvas.toDataURL('image/png');
+      document.getElementById('base64-output').value = base64;
+      console.log('Base64 generated!');
+    };
+
+    // Trigger load if cached
+    if (img.complete) {
+      img.onload();
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,492 @@
+import { create } from "zustand";
+import { Product, Filter, CartItem, ProductSize, ProductAddon } from "@/types/product";
+import { productsService, updateProductQuantitiesAtomically, restoreProductQuantitiesAtomically } from "@/lib/firebase";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { trackMetaAddToCart } from "@/lib/metaPixel";
+
+// Helper to bust all client-side product caches after any write operation
+const invalidateProductsCache = () => productsService.invalidateProductsCache();
+
+// Helper function to calculate discounted price
+const calculateDiscountedPrice = (product: Product): number => {
+  if (product.specialOffer && product.offerEndsAt) {
+    const now = new Date();
+    const offerEndDate = new Date(product.offerEndsAt);
+
+    // Check if offer is still active
+    if (now < offerEndDate) {
+      // Use discountPrice if available, otherwise fallback to percentage calculation
+      if (product.discountPrice) {
+        return product.discountPrice;
+      } else if (product.discountPercentage) {
+        return product.price - (product.price * product.discountPercentage) / 100;
+      }
+    }
+  }
+  return product.price;
+};
+
+interface StoreState {
+  products: Product[];
+  loadedCategory?: string;
+  loadedSubcategory?: string;
+  cart: CartItem[];
+  filters: Filter;
+  loading: boolean;
+  error: string | null;
+  setProducts: (products: Product[]) => void;
+  addToCart: (product: Product, quantity?: number, selectedSize?: ProductSize | null, selectedOptionGroups?: any[], selectedAddons?: ProductAddon[], selectedColor?: string) => void;
+  removeFromCart: (productId: string, selectedSizeId?: string | null) => void;
+  updateCartItemQuantity: (productId: string, quantity: number, selectedSizeId?: string | null, selectedOptionGroups?: any[], selectedAddonIds?: string[], selectedColor?: string) => void;
+  setFilters: (filters: Filter) => void;
+  clearCart: (skipRestore?: boolean) => void;
+  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  updateProduct: (product: Product) => Promise<void>;
+  deleteProduct: (productId: string) => Promise<void>;
+  checkExpiredProducts: () => void;
+  loadProducts: (category?: string, subcategory?: string, forceRefresh?: boolean) => Promise<void>;
+  searchProducts: (searchTerm: string) => Promise<Product[]>;
+  getProductsByCategory: (category: string) => Promise<Product[]>;
+  cleanCartFromDeletedProducts: () => void;
+  getCartTotal: () => number;
+  getCartItemPrice: (cartItem: CartItem) => number;
+  updateProductQuantity: (productId: string, newQuantity: number) => Promise<void>;
+}
+
+export const useStore = create<StoreState>()(
+  persist(
+    (set, get) => ({
+      products: [],
+      loadedCategory: undefined,
+      loadedSubcategory: undefined,
+      cart: [],
+      filters: {
+        search: undefined,
+        category: undefined,
+        subcategory: undefined,
+        brand: undefined,
+        color: undefined,
+        size: undefined,
+        minPrice: undefined,
+        maxPrice: undefined,
+        supplier: undefined,
+        features: undefined,
+        dynamicSpecs: undefined,
+        sortBy: undefined,
+      },
+      loading: false,
+      error: null,
+      setProducts: (products) => set({ products }),
+      addToCart: async (product, quantity = 1, selectedSize = null, selectedOptionGroups = [], selectedAddons = [], selectedColor) => {
+        // Check if product has wholesale info and available quantity
+        const availableQuantity = product.wholesaleInfo?.quantity || 0;
+        if (availableQuantity < quantity) {
+          throw new Error(`الكمية المطلوبة غير متوفرة. المتوفر: ${availableQuantity}`);
+        }
+
+        // Calculate final price
+        let unitFinalPrice = product.price;
+
+        // If sizes are available and one is selected, use that price
+        if (selectedSize) {
+          unitFinalPrice = selectedSize.price;
+        }
+
+        // Add addon prices
+        if (selectedAddons && selectedAddons.length > 0) {
+          selectedAddons.forEach(addon => {
+            unitFinalPrice += addon.price_delta;
+          });
+        }
+
+        if (selectedOptionGroups && selectedOptionGroups.length > 0) {
+          selectedOptionGroups.forEach(opt => {
+             unitFinalPrice += (Number(opt.extraPrice) || 0);
+          });
+        }
+
+        // Apply special offer discount if available
+        if (product.specialOffer &&
+          product.offerEndsAt &&
+          new Date(product.offerEndsAt) > new Date()) {
+          if (product.discountPrice) {
+            // Use the discount price as recorded in admin
+            unitFinalPrice = product.discountPrice;
+          } else if (product.discountPercentage) {
+            // Calculate discount if discountPrice is not available
+            const discountAmount = (unitFinalPrice * product.discountPercentage) / 100;
+            unitFinalPrice = unitFinalPrice - discountAmount;
+          }
+        }
+
+        const totalPrice = unitFinalPrice * quantity;
+
+        set((state) => {
+          // Filter out any invalid cart items first
+          const validCart = state.cart.filter(item => item.product && item.product.id);
+
+          // For products with sizes and colors, treat different combinations as different items
+          const existingItem = validCart.find(
+            (item) => item.product.id === product.id &&
+              (selectedSize ? item.selectedSize?.id === selectedSize.id : !item.selectedSize) &&
+              (selectedColor ? item.selectedColor === selectedColor : !item.selectedColor) &&
+              JSON.stringify(item.selectedOptionGroups) === JSON.stringify(selectedOptionGroups)
+          );
+
+          if (existingItem) {
+            // Check if adding more quantity would exceed available stock
+            const newTotalQuantity = existingItem.quantity + quantity;
+            if (availableQuantity < newTotalQuantity) {
+              throw new Error(`الكمية المطلوبة غير متوفرة. المتوفر: ${availableQuantity}`);
+            }
+
+            return {
+              cart: validCart.map((item) =>
+                item.product.id === product.id &&
+                  (selectedSize ? item.selectedSize?.id === selectedSize.id : !item.selectedSize) &&
+                  (selectedColor ? item.selectedColor === selectedColor : !item.selectedColor) &&
+                  JSON.stringify(item.selectedOptionGroups) === JSON.stringify(selectedOptionGroups)
+                  ? {
+                    ...item,
+                    quantity: item.quantity + quantity,
+                    totalPrice: item.unitFinalPrice * (item.quantity + quantity)
+                  }
+                  : item
+              ),
+              // Do NOT update products array local stock
+              products: state.products
+            };
+          }
+
+          // Create new cart item
+          const newCartItem: CartItem = {
+            product,
+            quantity,
+            selectedSize,
+            selectedOptionGroups: selectedOptionGroups || [],
+            selectedAddons: selectedAddons || [],
+            selectedColor,
+            unitFinalPrice,
+            totalPrice
+          };
+
+          return {
+            cart: [...validCart, newCartItem],
+            // Do NOT update products array local stock
+            products: state.products
+          };
+        });
+
+        // Track Meta Pixel AddToCart
+        try {
+          trackMetaAddToCart({
+            id: product.id,
+            name: product.name,
+            price: unitFinalPrice,
+            quantity,
+            category: product.category,
+          });
+        } catch (e) {
+          console.warn("Meta Pixel AddToCart error:", e);
+        }
+
+        // Do NOT update Firebase here. Stock is only deducted upon order confirmation.
+      },
+      removeFromCart: async (productId) => {
+        set((state) => {
+          return {
+            cart: state.cart.filter((item) => item.product && item.product.id !== productId),
+            // Do NOT restore stock implicitly
+            products: state.products
+          };
+        });
+      },
+      updateCartItemQuantity: async (productId, quantity, selectedSizeId = null, selectedOptionGroups = [], selectedAddonIds = [], selectedColor = undefined) => {
+        // Helper to check if addons match
+        const areAddonsMatching = (itemAddons: ProductAddon[], targetAddonIds: string[]) => {
+          if ((!itemAddons || itemAddons.length === 0) && (!targetAddonIds || targetAddonIds.length === 0)) return true;
+          if (!itemAddons || !targetAddonIds) return false;
+          if (itemAddons.length !== targetAddonIds.length) return false;
+          const itemAddonIds = itemAddons.map(a => a.id).sort();
+          const targetIds = [...targetAddonIds].sort();
+          return itemAddonIds.every((id, index) => id === targetIds[index]);
+        };
+
+        const cartItem = get().cart.find((item) =>
+          item.product &&
+          item.product.id === productId &&
+          (selectedSizeId ? item.selectedSize?.id === selectedSizeId : !item.selectedSize) &&
+          (selectedColor ? item.selectedColor === selectedColor : !item.selectedColor) &&
+          areAddonsMatching(item.selectedAddons || [], selectedAddonIds || []) &&
+          JSON.stringify(item.selectedOptionGroups || []) === JSON.stringify(selectedOptionGroups || [])
+        );
+
+        if (!cartItem) return;
+
+        const product = get().products.find((p) => p.id === productId);
+        if (!product) return;
+
+        const availableQuantity = product.wholesaleInfo?.quantity || 0;
+
+        // If increasing quantity, check if we have enough stock (total stock, not "remaining")
+        // Since we are not deducting from stock on add, the availableQuantity IS the total stock.
+        if (availableQuantity < quantity) {
+          throw new Error(`الكمية المطلوبة غير متوفرة. المتوفر: ${availableQuantity}`);
+        }
+
+        set((state) => ({
+          cart: state.cart.map((item) =>
+            item.product &&
+              item.product.id === productId &&
+              (selectedSizeId ? item.selectedSize?.id === selectedSizeId : !item.selectedSize) &&
+              (selectedColor ? item.selectedColor === selectedColor : !item.selectedColor) &&
+              areAddonsMatching(item.selectedAddons || [], selectedAddonIds || []) &&
+              JSON.stringify(item.selectedOptionGroups || []) === JSON.stringify(selectedOptionGroups || [])
+              ? {
+                ...item,
+                quantity,
+                totalPrice: item.unitFinalPrice * quantity
+              } : item
+          ),
+          products: state.products,
+        }));
+      },
+      setFilters: (filters) => set({ filters }),
+      clearCart: async (skipRestore = false) => {
+        // Just clear the cart, no need to restore stock to Firebase since it wasn't deducted
+        set({ cart: [] });
+      },
+      getCartTotal: () => {
+        const state = get();
+        return state.cart
+          .filter((item) => item.product && item.product.id) // Filter out invalid items
+          .reduce((total, item) => {
+            return total + item.totalPrice;
+          }, 0);
+      },
+      getCartItemPrice: (cartItem: CartItem) => {
+        return cartItem.unitFinalPrice;
+      },
+      addProduct: async (product) => {
+        try {
+          const newProduct = await productsService.addProduct(product);
+          const products = get().products;
+          // Optimistic: add to store state immediately so admin sees it at once
+          set({ products: [newProduct, ...products], error: null });
+          // Cache already busted inside productsService.addProduct, but ensure store-level too
+          invalidateProductsCache();
+        } catch (error) {
+          console.error('Error adding product:', error);
+          set({ error: 'فشل في إضافة المنتج' });
+          throw error;
+        }
+      },
+      updateProduct: async (updatedProduct) => {
+        try {
+          await productsService.updateProduct(updatedProduct.id, updatedProduct);
+          const products = get().products;
+          set({
+            products: products.map((p) =>
+              p.id === updatedProduct.id ? updatedProduct : p
+            ),
+            error: null,
+          });
+          // Bust cache so next customer visit gets fresh data
+          invalidateProductsCache();
+        } catch (error) {
+          console.error('Error updating product:', error);
+          set({ error: 'فشل في تحديث المنتج' });
+          throw error;
+        }
+      },
+      deleteProduct: async (productId) => {
+        try {
+          await productsService.deleteProduct(productId);
+          const products = get().products;
+          const cart = get().cart;
+
+          // Remove the product from products array
+          const updatedProducts = products.filter((p) => p.id !== productId);
+
+          // Also remove the product from cart if it exists
+          const updatedCart = cart.filter((item) => item.product && item.product.id !== productId);
+
+          set({
+            products: updatedProducts,
+            cart: updatedCart,
+            error: null,
+          });
+          // Bust cache so deleted product doesn't show for other users
+          invalidateProductsCache();
+        } catch (error) {
+          console.error('Error deleting product:', error);
+          set({ error: 'فشل في حذف المنتج' });
+          throw error;
+        }
+      },
+      checkExpiredProducts: () => {
+        const products = get().products;
+        const now = new Date();
+        const updatedProducts = products.map((product) => {
+          if (
+            product.expirationDate &&
+            new Date(product.expirationDate) < now &&
+            !product.isArchived
+          ) {
+            return { ...product, isArchived: true };
+          }
+          return product;
+        });
+        set({ products: updatedProducts });
+      },
+      loadProducts: async (category?: string, subcategory?: string, forceRefresh: boolean = false) => {
+        const currentProducts = get().products;
+        const currentLoadedCategory = get().loadedCategory;
+        const currentLoadedSubcategory = get().loadedSubcategory;
+
+        // Skip category-specific fetch only if not forcing refresh and target category already loaded
+        if (!forceRefresh && currentProducts.length > 0) {
+          const isTargetCategoryLoaded = category && currentLoadedCategory === category;
+
+          // Full catalog already loaded (loadedCategory undefined means all products are in store)
+          if (!category && currentLoadedCategory === undefined) {
+            console.log('Skipping loadProducts: full catalog already loaded in store.');
+            return;
+          }
+
+          if (category && subcategory) {
+            if (isTargetCategoryLoaded && currentLoadedSubcategory === subcategory) {
+              console.log(`Skipping loadProducts for category "${category}" and subcategory "${subcategory}" because they are already loaded.`);
+              return;
+            }
+          } else if (category) {
+            if (isTargetCategoryLoaded && currentLoadedSubcategory === undefined) {
+              console.log(`Skipping loadProducts for category "${category}" because it is already loaded.`);
+              return;
+            }
+          }
+        }
+
+        set({ loading: true, error: null });
+        try {
+          let products;
+          if (category && subcategory) {
+            products = await productsService.getProductsByCategoryAndSubcategory(category, subcategory);
+          } else if (category) {
+            products = await productsService.getProductsByCategory(category);
+          } else {
+            products = await productsService.getAllProducts(forceRefresh);
+          }
+          set({ 
+            products, 
+            loadedCategory: category || undefined, 
+            loadedSubcategory: subcategory || undefined, 
+            error: null 
+          });
+
+          // Clean cart from deleted products after loading
+          setTimeout(() => {
+            get().cleanCartFromDeletedProducts();
+          }, 100);
+        } catch (error) {
+          console.error('Error loading products:', error);
+          set({ error: 'فشل في تحميل المنتجات' });
+        } finally {
+          set({ loading: false });
+        }
+      },
+      searchProducts: async (searchTerm: string) => {
+        try {
+          return await productsService.searchProducts(searchTerm);
+        } catch (error) {
+          console.error('Error searching products:', error);
+          throw error;
+        }
+      },
+      getProductsByCategory: async (category: string) => {
+        try {
+          return await productsService.getProductsByCategory(category);
+        } catch (error) {
+          console.error('Error getting products by category:', error);
+          throw error;
+        }
+      },
+      // Clean cart from deleted products
+      cleanCartFromDeletedProducts: () => {
+        const products = get().products;
+        const cart = get().cart;
+
+        // Remove cart items that reference deleted products or have undefined product
+        const validCartItems = cart.filter((item) => {
+          // Check if item.product exists and has an id
+          if (!item.product || !item.product.id) {
+            return false;
+          }
+          // Check if product still exists in products list
+          return products.some((product) => product && product.id === item.product.id);
+        });
+
+        if (validCartItems.length !== cart.length) {
+          set({ cart: validCartItems });
+          console.log(`تم تنظيف ${cart.length - validCartItems.length} منتج محذوف من السلة`);
+        }
+      },
+      updateProductQuantity: async (productId: string, newQuantity: number) => {
+        try {
+          const product = get().products.find(p => p.id === productId);
+          if (!product) throw new Error('المنتج غير موجود');
+
+          console.log(`Store: Updating product ${product.name} (${productId}) quantity from ${product.wholesaleInfo?.quantity || 0} to ${newQuantity}`);
+
+          const updatedProduct = {
+            ...product,
+            wholesaleInfo: product.wholesaleInfo
+              ? { ...product.wholesaleInfo, quantity: newQuantity }
+              : product.wholesaleInfo
+          };
+
+          console.log('Store: Calling Firebase updateProduct...');
+          await productsService.updateProduct(productId, updatedProduct);
+          console.log('Store: Firebase updateProduct completed successfully');
+
+          // Update local state
+          const products = get().products;
+          const updatedProducts = products.map((p) =>
+            p.id === productId ? updatedProduct : p
+          );
+          set({
+            products: updatedProducts,
+          });
+          console.log('Store: Local state updated successfully');
+        } catch (error) {
+          console.error('Error updating product quantity:', error);
+          set({ error: 'فشل في تحديث كمية المنتج' });
+          throw error;
+        }
+      },
+    }),
+    {
+      name: "bazar_shop-storage",
+      storage: createJSONStorage(() => {
+        if (typeof window !== "undefined") {
+          return localStorage;
+        }
+        return {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {},
+        };
+      }),
+      partialize: (state) => ({
+        cart: state.cart,
+      }),
+    }
+  )
+);
+
+// Check for expired products every minute
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    useStore.getState().checkExpiredProducts();
+  }, 60000);
+}
