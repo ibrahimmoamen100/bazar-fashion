@@ -495,7 +495,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   // Splash Screen
   splashEnabled: true,
   splashTheme: 'elegant',
-  splashText: 'استكشف المول من شاشة جهازك ',
+  splashText: 'بازار الأزياء - استمتع بالتسوق الآن',
   splashSubtext: '',
   splashShowLogo: true,
   splashLogoUrl: '',

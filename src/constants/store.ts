@@ -3,7 +3,7 @@ export const STORE_CONFIG = {
   // معلومات المتجر الأساسية
   name: "bazar fashion",
   displayName: "متجر بازار للموضه - bazar fashion",
-  description: "متجر إلكتروني متخصص في بيع الأجهزة الإلكترونية وملحقاتها",
+  description: "متجر إلكتروني متخصص في بيع الملابس والموضة الرجالية والنسائية",
   tagline: "أفضل الأسعار وأعلى جودة",
 
   // الشعارات
@@ -19,8 +19,8 @@ export const STORE_CONFIG = {
     phone: "01024911062",
     formattedPhone: "201024911062",
     whatsapp: "01024911062",
-    email: "ibrahim.moamen100@gmail.com",
-    address: "  مول البستان وسط البلد - بجوار مترو انور السادات",
+    email: "[EMAIL_ADDRESS]",
+    address: " القاهرة — شارع مؤسسة الزكاة — مستشفى اليوم الواحد — خلف السجل المدني الجديد (أقرب محطة مترو: عزبة النخل الشرقية)  ",
     city: "القاهرة",
     country: "مصر",
   },
@@ -35,14 +35,14 @@ export const STORE_CONFIG = {
 
   // روابط التواصل الاجتماعي
   socialMedia: {
-    facebook: "https://www.facebook.com/BazarElectronics1",
-    tiktok: "https://www.tiktok.com/@ibrahim.moamen100",
-    youtube: "https://www.youtube.com/@ibrahim-moamen",
+    facebook: "https://www.facebook.com/bazarfashion100/",
+    // tiktok: "https://www.tiktok.com/@ibrahim.moamen100",
+    // youtube: "https://www.youtube.com/@ibrahim-moamen",
   },
 
   // معلومات صاحب المتجر
   owner: {
-    name: "التميمي  ",
+    name: "Bazar Fashion  ",
     phone: "01024911062",
     whatsapp: "01024911062",
     email: "",
