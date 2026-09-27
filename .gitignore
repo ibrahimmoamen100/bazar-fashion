@@ -56,3 +56,5 @@ vite.config.ts.timestamp*
 .next/
 next-env.d.ts
 
+
+.vercel

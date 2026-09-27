@@ -174,7 +174,7 @@ export const useProfitAnalysis = (timeRange: number = 30) => {
   // تحميل مبيعات الكاشير من localStorage
   const loadSales = () => {
     try {
-      const savedSales = localStorage.getItem("bazar_cashier-sales");
+      const savedSales = localStorage.getItem("bazar-fashion_cashier-sales") || localStorage.getItem("bazar_cashier-sales");
       if (savedSales) {
         const parsedSales = JSON.parse(savedSales);
         const cutoffDate = new Date();

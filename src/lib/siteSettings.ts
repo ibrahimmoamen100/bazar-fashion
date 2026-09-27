@@ -1,6 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
+import { STORAGE_KEYS } from '@/constants/store';
 
 export interface SiteTheme {
   id: string;
@@ -411,7 +412,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     products: 'المنتجات',
     wholesale: 'جملة وتوريدات',
     about: 'من نحن',
-    locations: 'فروعنا',
+    locations: 'مقر المخزن',
     builder: 'ابني تجميعتك',
   },
 
@@ -459,18 +460,18 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     },
   },
   locationsPage: {
-    heroTitle: 'فروعنا',
-    heroSubtitle: 'تعرف على أماكن وجودنا وزورونا في أي وقت',
+    heroTitle: 'مقر المخزن الرئيسي',
+    heroSubtitle: 'مركز استلام وتجهيز الطلبات وشحن جميع المحافظات',
   },
 
   branches: [
     {
-      id: 'branch1',
-      name: 'الفرع الرئيسي',
-      address: 'مول البستان وسط البلد - بجوار مترو انور السادات',
+      id: 'warehouse1',
+      name: 'المخزن الرئيسي (بازار فاشون)',
+      address: 'القاهرة — شارع مؤسسة الزكاة — مستشفى اليوم الواحد — خلف السجل المدني الجديد (أقرب محطة مترو: عزبة النخل الشرقية)',
       phone: '01024911062',
-      workingHours: '١٠ صباحاً - ١٠ مساءً',
-      googleMapsUrl: '',
+      workingHours: 'يومياً: ١٠:٠٠ ص - ١٠:٠٠ م',
+      googleMapsUrl: 'https://maps.google.com/?q=30.1444735,31.3391963',
     },
   ],
 
@@ -509,13 +510,13 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 // Hybrid Cache (localStorage + Firestore)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_KEY = 'bazar_site_settings_cache';
+const CACHE_KEY = STORAGE_KEYS.siteSettingsCache;
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
 function readCache(): SiteSettings | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(CACHE_KEY) || localStorage.getItem('bazar_site_settings_cache');
     if (!raw) return null;
     const { data, ts } = JSON.parse(raw);
     if (Date.now() - ts > CACHE_TTL) return null;
@@ -533,6 +534,7 @@ function writeCache(data: SiteSettings) {
 export function clearSettingsCache() {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(CACHE_KEY);
+  localStorage.removeItem('bazar_site_settings_cache');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,21 +1,28 @@
+import { STORAGE_KEYS } from "@/constants/store";
+
 // Utility function to clear localStorage data
 export const clearLocalStorage = () => {
   try {
-    // Clear the bazar_shop-storage data
+    // Clear the current shop storage data
+    localStorage.removeItem(STORAGE_KEYS.shopStorage);
     localStorage.removeItem('bazar_shop-storage');
-    
+
     // Also clear any other related storage keys
     const keysToRemove = [
+      STORAGE_KEYS.shopStorage,
+      STORAGE_KEYS.storeeCart,
+      STORAGE_KEYS.storeeProducts,
+      STORAGE_KEYS.storeeFilters,
       'bazar_shop-storage',
       'bazar_storee-cart',
       'bazar_storee-products',
       'bazar_storee-filters'
     ];
-    
+
     keysToRemove.forEach(key => {
       localStorage.removeItem(key);
     });
-    
+
     console.log('تم تنظيف البيانات المحفوظة في localStorage');
     return true;
   } catch (error) {
@@ -27,16 +34,16 @@ export const clearLocalStorage = () => {
 // Function to clear cart only
 export const clearCartStorage = () => {
   try {
-    const storageKey = 'bazar_shop-storage';
-    const existingData = localStorage.getItem(storageKey);
-    
+    const storageKey = STORAGE_KEYS.shopStorage;
+    const existingData = localStorage.getItem(storageKey) || localStorage.getItem('bazar_shop-storage');
+
     if (existingData) {
       const parsedData = JSON.parse(existingData);
       // Keep everything except cart
       const { cart, ...otherData } = parsedData;
       localStorage.setItem(storageKey, JSON.stringify(otherData));
     }
-    
+
     console.log('تم تنظيف السلة من localStorage');
     return true;
   } catch (error) {
@@ -48,9 +55,9 @@ export const clearCartStorage = () => {
 // Function to check if there are old products in localStorage
 export const checkOldProductsInStorage = () => {
   try {
-    const storageKey = 'bazar_shop-storage';
-    const existingData = localStorage.getItem(storageKey);
-    
+    const storageKey = STORAGE_KEYS.shopStorage;
+    const existingData = localStorage.getItem(storageKey) || localStorage.getItem('bazar_shop-storage');
+
     if (existingData) {
       const parsedData = JSON.parse(existingData);
       // Check if there are products stored (which shouldn't be the case with new Firebase setup)
@@ -59,10 +66,10 @@ export const checkOldProductsInStorage = () => {
         return true;
       }
     }
-    
+
     return false;
   } catch (error) {
     console.error('خطأ في فحص البيانات المحفوظة:', error);
     return false;
   }
-}; 
+};

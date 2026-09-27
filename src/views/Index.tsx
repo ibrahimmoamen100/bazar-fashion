@@ -26,39 +26,7 @@ import { ArrowLeft, Zap, Star, Shield, Truck, ChevronRight, Search, Users, Thumb
 import { STORE_HERO_CAROUSEL } from "@/constants/store";
 import { motion } from "framer-motion";
 
-const TRUST_BADGES = [
-  { icon: Shield, label: "ضمان 6 أشهر", color: "text-blue-600", bg: "bg-blue-50" },
-  { icon: Truck, label: " شحن جميع المحافظات", color: "text-emerald-600", bg: "bg-emerald-50" },
-  { icon: Star, label: "اجهزة اوريجينال ", color: "text-amber-600", bg: "bg-amber-50" },
-  { icon: Zap, label: "أفضل الأسعار", color: "text-purple-600", bg: "bg-purple-50" },
-];
 
-const FEATURED_CATEGORIES = [
-  {
-    title: "اللابتوب (Laptop)",
-    slug: "laptop",
-    image: "/lap.png",
-    color: "from-blue-600/80 to-blue-900/90",
-  },
-  {
-    title: "شاشات و All in one",
-    slug: "monitor&category=All+In+One",
-    image: "/monitor.png",
-    color: "from-emerald-600/80 to-emerald-900/90",
-  },
-  {
-    title: "كيسات استيراد (Desktop)",
-    slug: "desktop",
-    image: "/pc.png",
-    color: "from-purple-600/80 to-purple-900/90",
-  },
-  {
-    title: "إكسسوارات (Accessories)",
-    slug: "accessories",
-    image: "/access.png",
-    color: "from-amber-600/80 to-amber-900/90",
-  }
-];
 
 const MotionLink = motion.create(Link);
 

@@ -379,7 +379,7 @@ const ProductDetails = ({ initialProduct }: ProductDetailsProps) => {
     if (product) {
       setIsLoading(false);
       try {
-        sessionStorage.setItem('current_product', JSON.stringify({
+        sessionStorage.setItem('bazar-fashion_current_product', JSON.stringify({
           id: product.id,
           name: product.name,
           slug: product.id

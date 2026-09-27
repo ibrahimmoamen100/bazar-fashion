@@ -8,8 +8,8 @@ import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { Video, Scale, Star, Coins } from "lucide-react";
 
 // ─── Logo cache helpers ────────────────────────────────────────────────────────
-const LOGO_CACHE_KEY = 'bazar_splash_logo_cached_url';
-const SPLASH_SETTINGS_CACHE_KEY = 'bazar_splash_settings_cache';
+const LOGO_CACHE_KEY = 'bazar-fashion_splash_logo_cached_url';
+const SPLASH_SETTINGS_CACHE_KEY = 'bazar-fashion_splash_settings_cache';
 
 interface CachedSplashSettings {
   splashTextColor: string;
@@ -20,7 +20,7 @@ interface CachedSplashSettings {
 
 /** Returns the last successfully used logo URL from localStorage */
 function getCachedLogoUrl(): string {
-  try { return localStorage.getItem(LOGO_CACHE_KEY) || ''; } catch { return ''; }
+  try { return localStorage.getItem(LOGO_CACHE_KEY) || localStorage.getItem('bazar_splash_logo_cached_url') || ''; } catch { return ''; }
 }
 
 /** Persists the logo URL so the next visit can use it immediately */
@@ -31,7 +31,7 @@ function saveCachedLogoUrl(url: string) {
 /** Returns cached splash visual settings from localStorage */
 function getCachedSplashSettings(): CachedSplashSettings | null {
   try {
-    const raw = localStorage.getItem(SPLASH_SETTINGS_CACHE_KEY);
+    const raw = localStorage.getItem(SPLASH_SETTINGS_CACHE_KEY) || localStorage.getItem('bazar_splash_settings_cache');
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
@@ -67,7 +67,7 @@ function Particles({ color }: { color: string }) {
           <motion.div
             key={i}
             className="absolute rounded-full"
-            style={{ width: size, height: size, left: `${x}%`, bottom: '-20px', background: color, opacity: 0.5 }}
+            style={{ width: size, height: size, left: `${x}%`, bottom: '-20px', background: color, opacity: 0.5 } as React.CSSProperties}
             animate={{ y: [0, -(400 + Math.random() * 300)], opacity: [0.5, 0] }}
             transition={{ duration: dur, delay, repeat: Infinity, ease: 'easeOut' }}
           />

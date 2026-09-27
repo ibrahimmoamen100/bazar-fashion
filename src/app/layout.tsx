@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     url: BASE_URL,
     images: [
       {
-        url: '/logo3.png',
+        url: '/logo2.png',
         width: 1200,
         height: 630,
         alt: 'بازار للموضه | متجرك الشامل للأجهزة الإلكترونية في مصر',
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    images: ['/logo3.png'],
+    images: ['/logo2.png'],
   },
   icons: {
     icon: '/favicon.png',

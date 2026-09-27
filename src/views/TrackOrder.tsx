@@ -28,7 +28,7 @@ import {
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { formatCurrency, formatDate } from '@/utils/format';
-import { STORE_CONFIG } from '@/constants/store';
+import { STORE_CONFIG, STORAGE_KEYS } from '@/constants/store';
 import {
   fetchOrderByTrackingCode,
   searchOrdersByCodeOrPhone,
@@ -67,10 +67,10 @@ export default function TrackOrder() {
   useEffect(() => {
     refreshRecentOrders();
     const handleStorageUpdate = () => refreshRecentOrders();
-    window.addEventListener('bazar_tracked_orders_updated', handleStorageUpdate);
+    window.addEventListener(STORAGE_KEYS.trackedOrdersEvent, handleStorageUpdate);
     window.addEventListener('storage', handleStorageUpdate);
     return () => {
-      window.removeEventListener('bazar_tracked_orders_updated', handleStorageUpdate);
+      window.removeEventListener(STORAGE_KEYS.trackedOrdersEvent, handleStorageUpdate);
       window.removeEventListener('storage', handleStorageUpdate);
     };
   }, [refreshRecentOrders]);

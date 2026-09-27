@@ -148,7 +148,7 @@ const Admin = () => {
 
       // Update local storage so it applies immediately to this session
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('global_tracking_disabled', newState ? 'false' : 'true');
+        sessionStorage.setItem('bazar-fashion_global_tracking_disabled', newState ? 'false' : 'true');
       }
     } catch (error) {
       toast.error("حدث خطأ أثناء تعديل حالة التسجيل", { id: "tracking-toggle" });
@@ -478,13 +478,20 @@ const Admin = () => {
       console.log('Admin: Firebase sales cleared successfully');
 
       // Clear cashier sales data from localStorage
+      localStorage.removeItem("bazar-fashion_cashier-sales");
       localStorage.removeItem("bazar_cashier-sales");
 
       // Clear analytics visitor data
+      localStorage.removeItem("bazar-fashion_returning_visitor");
       localStorage.removeItem("bazar_returning_visitor");
 
       // Clear any other related data
       const keysToRemove = [
+        "bazar-fashion_cashier-sales",
+        "bazar-fashion_returning_visitor",
+        "bazar-fashion_analytics-data",
+        "bazar-fashion_profit-analysis-data",
+        "bazar-fashion_orders-data",
         "bazar_cashier-sales",
         "bazar_returning_visitor",
         "bazar_analytics-data",

@@ -2,17 +2,18 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "./firebase";
 import { BuilderPreset, BuilderPresetSummary } from "@/types/builder";
 import { BUILDER_PRESETS as DEFAULT_PRESETS } from "@/constants/builderPresets";
+import { STORAGE_KEYS } from "@/constants/store";
 
 const BUILDER_CONFIG_COLLECTION = "admin_config";
 const BUILDER_DOC_ID = "builder_presets";
 
 // ── Cache Storage Keys ──
-const CACHE_KEY_SUMMARIES = "bazar_builder_summaries_v2";
-const CACHE_KEY_CATEGORIES = "bazar_builder_categories_v2";
-const CACHE_KEY_PRESETS_MASTER = "bazar_dynamic_builder_presets_v2";
-const CACHE_KEY_PRESET_PREFIX = "bazar_builder_preset_v2_";
+const CACHE_KEY_SUMMARIES = STORAGE_KEYS.builderSummaries;
+const CACHE_KEY_CATEGORIES = STORAGE_KEYS.builderCategories;
+const CACHE_KEY_PRESETS_MASTER = STORAGE_KEYS.builderPresetsMaster;
+const CACHE_KEY_PRESET_PREFIX = STORAGE_KEYS.builderPresetPrefix;
 // Stores the last known `updatedAt` token from Firestore to detect remote changes
-const CACHE_KEY_VERSION_TOKEN = "bazar_builder_version_token_v2";
+const CACHE_KEY_VERSION_TOKEN = STORAGE_KEYS.builderVersionToken;
 
 // 24 Hours Cache TTL (Long-term cache to preserve Firebase free tier)
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -394,11 +395,14 @@ export const builderService = {
         localStorage.removeItem(CACHE_KEY_SUMMARIES);
         localStorage.removeItem(CACHE_KEY_CATEGORIES);
         localStorage.removeItem(CACHE_KEY_PRESETS_MASTER);
+        localStorage.removeItem("bazar_builder_summaries_v2");
+        localStorage.removeItem("bazar_builder_categories_v2");
+        localStorage.removeItem("bazar_dynamic_builder_presets_v2");
         
         // Remove individual preset cached entries
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && key.startsWith(CACHE_KEY_PRESET_PREFIX)) {
+          if (key && (key.startsWith(CACHE_KEY_PRESET_PREFIX) || key.startsWith("bazar_builder_preset_v2_"))) {
             localStorage.removeItem(key);
           }
         }

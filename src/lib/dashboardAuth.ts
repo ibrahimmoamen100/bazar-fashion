@@ -1,5 +1,6 @@
 import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
+import { STORAGE_KEYS } from '@/constants/store';
 
 export type DashboardPermission =
   | 'analytics'       // إحصائيات الزوار
@@ -32,7 +33,7 @@ export interface DashboardSession {
   expiresAt: string;
 }
 
-const SESSION_KEY = 'bazar_dashboard_user_session';
+const SESSION_KEY = STORAGE_KEYS.dashboardUserSession;
 const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8 hours
 
 export const PERMISSION_LABELS: Record<DashboardPermission, string> = {
@@ -67,7 +68,7 @@ export const PERMISSION_ROUTES: Record<DashboardPermission, string> = {
 
 export function getDashboardSession(): DashboardSession | null {
   try {
-    const raw = localStorage.getItem(SESSION_KEY);
+    const raw = localStorage.getItem(SESSION_KEY) || localStorage.getItem('bazar_dashboard_user_session');
     if (!raw) return null;
     const session: DashboardSession = JSON.parse(raw);
     if (new Date() > new Date(session.expiresAt)) {
@@ -86,7 +87,9 @@ export function saveDashboardSession(session: DashboardSession): void {
 
 export function clearDashboardSession(): void {
   localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem('bazar_dashboard_user_session');
   // keep backward compat flag cleared too
+  localStorage.removeItem(STORAGE_KEYS.dashboardAuth);
   localStorage.removeItem('bazar_dashboard_auth');
 }
 
@@ -171,7 +174,7 @@ export async function loginDashboardUser(
 
     saveDashboardSession(session);
     // keep backward compat
-    localStorage.setItem('bazar_dashboard_auth', 'true');
+    localStorage.setItem(STORAGE_KEYS.dashboardAuth, 'true');
 
     return { success: true, session };
   } catch (err: any) {

@@ -1,5 +1,6 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { STORAGE_KEYS } from '@/constants/store';
 
 export interface AdminCredentials {
   password: string;
@@ -16,7 +17,7 @@ export interface AdminSession {
 }
 
 class AdminAuthService {
-  private readonly SESSION_COOKIE_NAME = 'bazar_admin_session_token';
+  private readonly SESSION_COOKIE_NAME = STORAGE_KEYS.adminSessionToken;
   private readonly SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   private readonly ADMIN_PASSWORD = '10'; // Updated to the strictly required standalone password
 

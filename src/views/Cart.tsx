@@ -260,35 +260,35 @@ const SupplierGroupCheckout: React.FC<SupplierGroupCheckoutProps> = ({
   useEffect(() => {
     if (watchedFullName !== undefined && watchedFullName !== customerInfo.fullName) {
       setCustomerInfo(prev => ({ ...prev, fullName: watchedFullName }));
-      localStorage.setItem('bazar_checkout_fullName', watchedFullName);
+      localStorage.setItem('bazar-fashion_checkout_fullName', watchedFullName);
     }
   }, [watchedFullName]);
 
   useEffect(() => {
     if (watchedPhoneNumber !== undefined && watchedPhoneNumber !== customerInfo.phoneNumber) {
       setCustomerInfo(prev => ({ ...prev, phoneNumber: watchedPhoneNumber }));
-      localStorage.setItem('bazar_checkout_phoneNumber', watchedPhoneNumber);
+      localStorage.setItem('bazar-fashion_checkout_phoneNumber', watchedPhoneNumber);
     }
   }, [watchedPhoneNumber]);
 
   useEffect(() => {
     if (watchedCity !== undefined && watchedCity !== customerInfo.city) {
       setCustomerInfo(prev => ({ ...prev, city: watchedCity }));
-      localStorage.setItem('bazar_checkout_city', watchedCity);
+      localStorage.setItem('bazar-fashion_checkout_city', watchedCity);
     }
   }, [watchedCity]);
 
   useEffect(() => {
     if (watchedAddress !== undefined && watchedAddress !== customerInfo.address) {
       setCustomerInfo(prev => ({ ...prev, address: watchedAddress }));
-      localStorage.setItem('bazar_checkout_address', watchedAddress);
+      localStorage.setItem('bazar-fashion_checkout_address', watchedAddress);
     }
   }, [watchedAddress]);
 
   useEffect(() => {
     if (watchedNotes !== undefined && watchedNotes !== customerInfo.notes) {
       setCustomerInfo(prev => ({ ...prev, notes: watchedNotes }));
-      localStorage.setItem('bazar_checkout_notes', watchedNotes);
+      localStorage.setItem('bazar-fashion_checkout_notes', watchedNotes);
     }
   }, [watchedNotes]);
 
@@ -296,21 +296,21 @@ const SupplierGroupCheckout: React.FC<SupplierGroupCheckoutProps> = ({
   useEffect(() => {
     if (watchedResFullName !== undefined && watchedResFullName !== customerInfo.fullName) {
       setCustomerInfo(prev => ({ ...prev, fullName: watchedResFullName }));
-      localStorage.setItem('bazar_checkout_fullName', watchedResFullName);
+      localStorage.setItem('bazar-fashion_checkout_fullName', watchedResFullName);
     }
   }, [watchedResFullName]);
 
   useEffect(() => {
     if (watchedResPhone !== undefined && watchedResPhone !== customerInfo.phoneNumber) {
       setCustomerInfo(prev => ({ ...prev, phoneNumber: watchedResPhone }));
-      localStorage.setItem('bazar_checkout_phoneNumber', watchedResPhone);
+      localStorage.setItem('bazar-fashion_checkout_phoneNumber', watchedResPhone);
     }
   }, [watchedResPhone]);
 
   useEffect(() => {
     if (watchedResNotes !== undefined && watchedResNotes !== customerInfo.notes) {
       setCustomerInfo(prev => ({ ...prev, notes: watchedResNotes }));
-      localStorage.setItem('bazar_checkout_notes', watchedResNotes);
+      localStorage.setItem('bazar-fashion_checkout_notes', watchedResNotes);
     }
   }, [watchedResNotes]);
 
@@ -1230,11 +1230,11 @@ const Cart = () => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setCustomerInfo({
-        fullName: localStorage.getItem('bazar_checkout_fullName') || '',
-        phoneNumber: localStorage.getItem('bazar_checkout_phoneNumber') || '',
-        city: localStorage.getItem('bazar_checkout_city') || '',
-        address: localStorage.getItem('bazar_checkout_address') || '',
-        notes: localStorage.getItem('bazar_checkout_notes') || '',
+        fullName: localStorage.getItem('bazar-fashion_checkout_fullName') || localStorage.getItem('bazar_checkout_fullName') || '',
+        phoneNumber: localStorage.getItem('bazar-fashion_checkout_phoneNumber') || localStorage.getItem('bazar_checkout_phoneNumber') || '',
+        city: localStorage.getItem('bazar-fashion_checkout_city') || localStorage.getItem('bazar_checkout_city') || '',
+        address: localStorage.getItem('bazar-fashion_checkout_address') || localStorage.getItem('bazar_checkout_address') || '',
+        notes: localStorage.getItem('bazar-fashion_checkout_notes') || localStorage.getItem('bazar_checkout_notes') || '',
       });
     }
   }, []);

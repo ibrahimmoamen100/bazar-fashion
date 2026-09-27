@@ -3,6 +3,7 @@ import { Product, Filter, CartItem, ProductSize, ProductAddon } from "@/types/pr
 import { productsService, updateProductQuantitiesAtomically, restoreProductQuantitiesAtomically } from "@/lib/firebase";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { trackMetaAddToCart } from "@/lib/metaPixel";
+import { STORAGE_KEYS } from "@/constants/store";
 
 // Helper to bust all client-side product caches after any write operation
 const invalidateProductsCache = () => productsService.invalidateProductsCache();
@@ -466,7 +467,7 @@ export const useStore = create<StoreState>()(
       },
     }),
     {
-      name: "bazar_shop-storage",
+      name: STORAGE_KEYS.shopStorage,
       storage: createJSONStorage(() => {
         if (typeof window !== "undefined") {
           return localStorage;

@@ -1,4 +1,5 @@
 import { getCategorySlugFromName } from "./category";
+import { STORAGE_KEYS } from "@/constants/store";
 
 export const generateSlug = (name: string): string => {
   if (!name) return '';
@@ -34,7 +35,7 @@ export const slugifySupplier = (supplierSlugOrName?: string): string => {
   // Auto-hydrate from sessionStorage if available in browser
   if (typeof window !== 'undefined') {
     try {
-      const stored = sessionStorage.getItem('bazar_active_suppliers_cache');
+      const stored = sessionStorage.getItem(STORAGE_KEYS.suppliersCache) || sessionStorage.getItem('bazar_active_suppliers_cache');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed?.data)) {

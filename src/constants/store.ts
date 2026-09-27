@@ -71,40 +71,13 @@ export const STORE_CONFIG = {
   // مواقع الفروع
   locations: [
 
-    {
-      id: "branch2",
-      name: "       شركة شركه بازار للموضهفرع ايزون مول    ",
-      address: " 382W+8V9, Al Manteqah Ath Thamenah, Nasr City, Cairo Governorate 4441552 ",
-      phone: "01024911062",
-      hours: "11:00 صباحاً - 9:00 مساءً (ماعدا الجمعة)",
-      coordinates: {
-        lat: 30.0507931,
-        lng: 31.34706
-      },
 
-      googleMapsUrl:
-        "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4249.441131397072!2d31.3470600000003!3d30.0507931!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14583f0002866a51%3A0x59ff341bcbf1b4c3!2sE%20ZONE%20MALL!5e1!3m2!1sen!2seg!4v1773481659531!5m2!1sen!2seg",
-      isMain: true,
-    },
-    {
-      id: "branch3",
-      name: "       شركة شركه بازار للموضهفرع فيصل      ",
-      address: " شارع الاربعتاشر مقابل سوبر ماركت الفرجانى متفرع من شارع العشرين فيصل، شارع ال, Boulaq Al Dakrour, Giza Governorate  ",
-      phone: "01024911062",
-      hours: "11:00 صباحاً - 9:00 مساءً (ماعدا الجمعة)",
-      coordinates: {
-        lat: 30.018461617336946,
-        lng: 31.182576619105504
-      },
 
-      googleMapsUrl:
-        "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3593.4579070445393!2d31.182576619105504!3d30.018461617336946!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1458473919d136ab%3A0x7478f0aaa5e48ed9!2z2LTYsdmD2Kkg2YPZhdio2YrZiCDYs9mK2YE!5e1!3m2!1sen!2seg!4v1773486354903!5m2!1sen!2seg",
-    },
     {
       id: "branch4",
-      name: "       شركة شركه بازار للموضهفرع مول البستان      ",
-      address: " مول البستان, Bab Al Louq, Abdeen, Cairo Governorate 4280122 ",
-      phone: "01018154208",
+      name: "       ",
+      address: " ",
+      phone: "01024911062",
       hours: "11:00 صباحاً - 9:00 مساءً (ماعدا الجمعة)",
       coordinates: {
         lat: 30.04520578513648,
@@ -132,22 +105,14 @@ export const STORE_CONFIG = {
   heroCarousel: [
     {
       id: "slide1",
-      image: "/1.png",
+      image: "/4.png",
       title: "  ",
       description: " ",
       buttonText: "تسوق الآن",
       buttonLink: "/categories",
       overlay: "from-black/70 to-transparent",
     },
-    {
-      id: "slide2",
-      image: "/2.png",
-      title: "  ",
-      description: " ",
-      buttonText: "تسوق الآن",
-      buttonLink: "/categories",
-      overlay: "from-black/70 to-transparent",
-    },
+
     // {
     //   id: "slide2",
     //   image: "/bg2.jpeg",
@@ -315,4 +280,86 @@ export const DEFAULT_BAZAR_SUPPLIER = {
   address: "bazar fashion - القاهره - مؤسسه الزكاه -اليوم الواحد خلف السجل المدني الجديد -اقرب محطة مترو عزبه النخل الشرقيه",
   phone: "01024911062",
   logo: "/logo3.png",
+} as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Central Storage & Local Persistence Configuration
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * المفتاح الموحد الرئيسي لجميع مفاتيح التخزين المحلي والجلسات والكوكيز
+ * بمجرد تغيير هذه القيمة هنا، تتغير جميع المفاتيح عبر التطبيق بالكامل تلقائياً
+ */
+export const STORAGE_PREFIX = "bazar-fashion";
+
+export const getStorageKey = (key: string): string => `${STORAGE_PREFIX}_${key}`;
+
+export const STORAGE_KEYS = {
+  prefix: STORAGE_PREFIX,
+
+  // Store & Cart (Zustand Persist)
+  shopStorage: `${STORAGE_PREFIX}_shop-storage`,
+  storeeCart: `${STORAGE_PREFIX}_storee-cart`,
+  storeeProducts: `${STORAGE_PREFIX}_storee-products`,
+  storeeFilters: `${STORAGE_PREFIX}_storee-filters`,
+
+  // Site Settings & Splash Cache
+  siteSettingsCache: `${STORAGE_PREFIX}_site_settings_cache`,
+  splashLogoUrl: `${STORAGE_PREFIX}_splash_logo_cached_url`,
+  splashSettings: `${STORAGE_PREFIX}_splash_settings_cache`,
+  categoriesTreeCache: `${STORAGE_PREFIX}_categories_tree_cache`,
+
+  // Catalog & Product Cache
+  cachedProducts: `${STORAGE_PREFIX}_cached_products`,
+  catalogVersion: `${STORAGE_PREFIX}_catalog_version`,
+  localProductsFallback: `${STORAGE_PREFIX}_local_products_fallback`,
+  customSpecProfiles: `${STORAGE_PREFIX}_custom_spec_profiles`,
+
+  // Cashier & Sales
+  cashierSales: `${STORAGE_PREFIX}_cashier-sales`,
+
+  // Analytics & Demographics
+  returningVisitor: `${STORAGE_PREFIX}_returning_visitor`,
+  analyticsData: `${STORAGE_PREFIX}_analytics-data`,
+  profitAnalysisData: `${STORAGE_PREFIX}_profit-analysis-data`,
+  ordersData: `${STORAGE_PREFIX}_orders-data`,
+  userAge: `${STORAGE_PREFIX}_user_age`,
+  userGender: `${STORAGE_PREFIX}_user_gender`,
+  currentProduct: `${STORAGE_PREFIX}_current_product`,
+  globalTrackingDisabled: `${STORAGE_PREFIX}_global_tracking_disabled`,
+  lastPage: `${STORAGE_PREFIX}_last_page`,
+  lastPageViewId: `${STORAGE_PREFIX}_last_page_view_id`,
+  scrollDepth: (page: string) => `${STORAGE_PREFIX}_scroll_depth_${page}`,
+
+  // Checkout info
+  checkoutFullName: `${STORAGE_PREFIX}_checkout_fullName`,
+  checkoutPhoneNumber: `${STORAGE_PREFIX}_checkout_phoneNumber`,
+  checkoutCity: `${STORAGE_PREFIX}_checkout_city`,
+  checkoutAddress: `${STORAGE_PREFIX}_checkout_address`,
+  checkoutNotes: `${STORAGE_PREFIX}_checkout_notes`,
+
+  // Order Tracking
+  trackedOrders: `${STORAGE_PREFIX}_tracked_orders`,
+  trackedOrdersEvent: `${STORAGE_PREFIX}_tracked_orders_updated`,
+
+  // Auth Sessions
+  adminSessionToken: `${STORAGE_PREFIX}_admin_session_token`,
+  attendanceSessionToken: `${STORAGE_PREFIX}_attendance_session_token`,
+  dashboardUserSession: `${STORAGE_PREFIX}_dashboard_user_session`,
+  dashboardAuth: `${STORAGE_PREFIX}_dashboard_auth`,
+
+  // Builder Service
+  builderSummaries: `${STORAGE_PREFIX}_builder_summaries_v2`,
+  builderCategories: `${STORAGE_PREFIX}_builder_categories_v2`,
+  builderPresetsMaster: `${STORAGE_PREFIX}_dynamic_builder_presets_v2`,
+  builderPresetPrefix: `${STORAGE_PREFIX}_builder_preset_v2_`,
+  builderVersionToken: `${STORAGE_PREFIX}_builder_version_token_v2`,
+
+  // Suppliers Cache
+  suppliersCache: `${STORAGE_PREFIX}_active_suppliers_cache`,
+
+  // Form persistence
+  formPersistence: (key: string) => `${STORAGE_PREFIX}_form_persistence_${key}`,
+
+  // Cookies
+  sidebarCookie: `${STORAGE_PREFIX}:sidebar:state`,
 } as const;

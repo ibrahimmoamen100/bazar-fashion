@@ -1,8 +1,9 @@
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { safeLocalStorage } from '@/lib/ssr-safe';
+import { STORAGE_KEYS } from '@/constants/store';
 
-const TRACKED_ORDERS_KEY = 'bazar_tracked_orders';
+const TRACKED_ORDERS_KEY = STORAGE_KEYS.trackedOrders;
 
 export interface TrackedOrderSummary {
   orderCode: string;
@@ -55,7 +56,7 @@ export function saveTrackedOrder(order: TrackedOrderSummary): void {
 
     // Dispatch a custom event so Navbar badge can update reactively
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('bazar_tracked_orders_updated'));
+      window.dispatchEvent(new CustomEvent(STORAGE_KEYS.trackedOrdersEvent));
     }
   } catch (err) {
     console.error('Failed to save tracked order to localStorage:', err);
@@ -84,7 +85,7 @@ export function updateTrackedOrderStatus(
     });
     safeLocalStorage.setItem(TRACKED_ORDERS_KEY, JSON.stringify(updated));
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('bazar_tracked_orders_updated'));
+      window.dispatchEvent(new CustomEvent(STORAGE_KEYS.trackedOrdersEvent));
     }
   } catch (err) {
     console.error('Failed to update tracked order in localStorage:', err);
@@ -102,7 +103,7 @@ export function removeTrackedOrder(orderCode: string): void {
     );
     safeLocalStorage.setItem(TRACKED_ORDERS_KEY, JSON.stringify(filtered));
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('bazar_tracked_orders_updated'));
+      window.dispatchEvent(new CustomEvent(STORAGE_KEYS.trackedOrdersEvent));
     }
   } catch (err) {
     console.error('Failed to remove tracked order from localStorage:', err);

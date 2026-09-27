@@ -1,6 +1,7 @@
 'use client';
 
-import { Phone } from "lucide-react";
+import { MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   FaFacebookF,
   FaWhatsapp,
@@ -46,37 +47,19 @@ export function Topbar() {
     >
       <div className="container flex h-10 items-center justify-between gap-4 px-4 md:px-8">
 
-        {/* ── Left: Phone + Location ── */}
-        <div className="hidden sm:flex items-center gap-4">
-          {settings.phone && (
-            <a
-              href={`tel:${settings.phone}`}
-              className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors font-semibold"
-              dir="ltr"
-              aria-label="اتصل بنا"
-            >
-              <Phone className="h-3.5 w-3.5 shrink-0" />
-              <span>{settings.phone}</span>
-            </a>
-          )}
-
-          {settings.phone && (
-            <span className="w-px h-4 bg-white/20" />
-          )}
-
-          {/* <Link
+        {/* ── Left: Location Link (مقر المخزن بدلاً من رقم الهاتف) ── */}
+        <div className="flex items-center">
+          <Link
             to="/locations"
-            className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors font-semibold"
-            aria-label="فروعنا"
+            className="group flex items-center gap-1.5 py-1 px-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs transition-all duration-200 hover:scale-105 shadow-xs"
+            aria-label={settings.navLinks?.locations || "مقر المخزن"}
           >
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
-            <span>
-              {settings.navLinks?.locations || "فروعنا"}
-            </span>
-          </Link> */}
+            <MapPin className="h-3.5 w-3.5 text-yellow-300 group-hover:scale-110 transition-transform" />
+            <span>{settings.navLinks?.locations || "مقر المخزن"}</span>
+          </Link>
         </div>
 
-        {/* ── Center: Social Icons ── */}
+        {/* ── Right: Social Icons ── */}
         <div className="flex items-center gap-1.5">
           {socialLinks.map((link, i) => (
             <a
@@ -99,21 +82,6 @@ export function Topbar() {
           ))}
         </div>
 
-
-        {/* Mobile: show phone call button instead of location link */}
-        <div className="flex sm:hidden items-center gap-2">
-          {settings.phone ? (
-            <a
-              href={`tel:${settings.phone}`}
-              className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors font-semibold"
-              dir="ltr"
-              aria-label="اتصل بنا"
-            >
-              <Phone className="h-3 w-3 shrink-0" />
-              <span>{settings.phone}</span>
-            </a>
-          ) : null}
-        </div>
       </div>
     </div>
   );

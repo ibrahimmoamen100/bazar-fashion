@@ -1,6 +1,7 @@
 import { db } from './firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { registerSupplierSlug } from '@/utils/url';
+import { STORAGE_KEYS } from '@/constants/store';
 
 export interface CachedSupplier {
   id: string;
@@ -17,7 +18,7 @@ export interface CachedSupplier {
   isArchived?: boolean;
 }
 
-const SUPPLIERS_CACHE_KEY = 'bazar_active_suppliers_cache';
+const SUPPLIERS_CACHE_KEY = STORAGE_KEYS.suppliersCache;
 const SUPPLIERS_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
 // In-Memory L1 Cache

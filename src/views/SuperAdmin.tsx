@@ -103,7 +103,7 @@ function SuperAdminDashboard() {
       await setDoc(doc(db, 'admin_config', 'settings'), { trackingEnabled: next }, { merge: true });
       setTrackingEnabled(next);
       if (typeof window !== 'undefined')
-        sessionStorage.setItem('global_tracking_disabled', next ? 'false' : 'true');
+        sessionStorage.setItem('bazar-fashion_global_tracking_disabled', next ? 'false' : 'true');
       toast.success(next ? 'تم تفعيل الإحصائيات' : 'تم إيقاف الإحصائيات مؤقتاً', { id: 'tracking' });
     } catch { toast.error('حدث خطأ', { id: 'tracking' }); }
   }, [trackingEnabled]);
@@ -126,7 +126,18 @@ function SuperAdminDashboard() {
     try {
       toast.loading('جاري إعادة تعيين البيانات...', { id: 'reset' });
       await salesService.clearAllSales();
-      ['bazar_cashier-sales', 'bazar_returning_visitor', 'bazar_analytics-data', 'bazar_profit-analysis-data', 'bazar_orders-data']
+      [
+        'bazar-fashion_cashier-sales',
+        'bazar-fashion_returning_visitor',
+        'bazar-fashion_analytics-data',
+        'bazar-fashion_profit-analysis-data',
+        'bazar-fashion_orders-data',
+        'bazar_cashier-sales',
+        'bazar_returning_visitor',
+        'bazar_analytics-data',
+        'bazar_profit-analysis-data',
+        'bazar_orders-data'
+      ]
         .forEach(k => localStorage.removeItem(k));
       toast.success('تم إعادة تعيين جميع البيانات بنجاح', { id: 'reset' });
       setTimeout(() => window.location.reload(), 1500);

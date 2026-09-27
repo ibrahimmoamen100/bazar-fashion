@@ -4,6 +4,7 @@ import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
 import { getAuth } from 'firebase/auth';
 import { getFirestore, collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc, query, orderBy, where, Timestamp, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { Product, CatalogMeta } from '@/types/product';
+import { STORAGE_KEYS } from '@/constants/store';
 import {
   Employee,
   AttendanceRecord,
@@ -201,7 +202,7 @@ export class FirebaseProductsService {
       // If in browser, update local catalog_version immediately
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem('catalog_version', newVersion);
+          localStorage.setItem(STORAGE_KEYS.catalogVersion, newVersion);
         } catch { }
       }
 
@@ -251,6 +252,8 @@ export class FirebaseProductsService {
   invalidateProductsCache(): void {
     if (typeof window === 'undefined') return;
     try {
+      localStorage.removeItem(STORAGE_KEYS.cachedProducts);
+      localStorage.removeItem(STORAGE_KEYS.catalogVersion);
       localStorage.removeItem('cached_products');
       localStorage.removeItem('catalog_version');
     } catch {
@@ -264,8 +267,8 @@ export class FirebaseProductsService {
 
   // Get all products with catalog version cache verification
   async getAllProducts(forceRefresh: boolean = false): Promise<Product[]> {
-    const CACHE_KEY = 'cached_products';
-    const VERSION_KEY = 'catalog_version';
+    const CACHE_KEY = STORAGE_KEYS.cachedProducts;
+    const VERSION_KEY = STORAGE_KEYS.catalogVersion;
 
     // ── Server-Side Rendering / ISR (Direct Firestore Query) ──────────────────
     if (typeof window === 'undefined') {
@@ -293,8 +296,8 @@ export class FirebaseProductsService {
     }
 
     // ── Client-Side Cache & Version Strategy ──────────────────────────────────
-    const localVersion = localStorage.getItem(VERSION_KEY);
-    const cachedProductsJson = localStorage.getItem(CACHE_KEY);
+    const localVersion = localStorage.getItem(VERSION_KEY) || localStorage.getItem('catalog_version');
+    const cachedProductsJson = localStorage.getItem(CACHE_KEY) || localStorage.getItem('cached_products');
 
     // 1. If not forcing refresh, check remote catalog version token (1 lightweight read)
     if (!forceRefresh) {
@@ -364,8 +367,8 @@ export class FirebaseProductsService {
 
       // Merge & sync any offline fallback products if present
       try {
-        const localProductsKey = 'bazar_local_products_fallback';
-        const localProductsJson = localStorage.getItem(localProductsKey);
+        const localProductsKey = STORAGE_KEYS.localProductsFallback;
+        const localProductsJson = localStorage.getItem(localProductsKey) || localStorage.getItem('bazar_local_products_fallback');
         if (localProductsJson) {
           const localProducts: Product[] = JSON.parse(localProductsJson);
           console.log('📦 Found', localProducts.length, 'products in localStorage fallback');
@@ -631,7 +634,7 @@ export class FirebaseProductsService {
   private _getCachedCatalog(): Product[] | null {
     if (typeof window === 'undefined') return null;
     try {
-      const json = localStorage.getItem('cached_products');
+      const json = localStorage.getItem(STORAGE_KEYS.cachedProducts) || localStorage.getItem('cached_products');
       if (!json) return null;
       const parsed: Product[] = JSON.parse(json);
       return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
@@ -2344,7 +2347,7 @@ export class FirebaseSpecProfilesService {
 
     // Load and merge with localStorage backup to ensure offline availability and robustness
     try {
-      const saved = localStorage.getItem('bazar_custom_spec_profiles');
+      const saved = localStorage.getItem(STORAGE_KEYS.customSpecProfiles) || localStorage.getItem('bazar_custom_spec_profiles');
       if (saved) {
         const parsed: Record<string, any> = JSON.parse(saved);
         const localProfiles = Object.entries(parsed).map(([name, data]) => {
@@ -2412,10 +2415,10 @@ export class FirebaseSpecProfilesService {
 
     // Save to localStorage as a robust local backup
     try {
-      const saved = localStorage.getItem('bazar_custom_spec_profiles');
+      const saved = localStorage.getItem(STORAGE_KEYS.customSpecProfiles) || localStorage.getItem('bazar_custom_spec_profiles');
       const current: Record<string, any> = saved ? JSON.parse(saved) : {};
       current[name] = { fields: cleanFields, categoryImage, categoryValue, subcategoryValue, subcategorySlug };
-      localStorage.setItem('bazar_custom_spec_profiles', JSON.stringify(current));
+      localStorage.setItem(STORAGE_KEYS.customSpecProfiles, JSON.stringify(current));
     } catch (e) {
       console.warn('Failed to save spec profile to localStorage backup:', e);
     }
@@ -2436,13 +2439,13 @@ export class FirebaseSpecProfilesService {
   async deleteProfile(id: string): Promise<void> {
     // Delete from localStorage backup
     try {
-      const saved = localStorage.getItem('bazar_custom_spec_profiles');
+      const saved = localStorage.getItem(STORAGE_KEYS.customSpecProfiles) || localStorage.getItem('bazar_custom_spec_profiles');
       if (saved) {
         const parsed: Record<string, SpecProfileField[]> = JSON.parse(saved);
         const updated = Object.fromEntries(
           Object.entries(parsed).filter(([name]) => this.toId(name) !== id)
         );
-        localStorage.setItem('bazar_custom_spec_profiles', JSON.stringify(updated));
+        localStorage.setItem(STORAGE_KEYS.customSpecProfiles, JSON.stringify(updated));
       }
     } catch (e) {
       console.warn('Failed to delete profile from localStorage backup:', e);

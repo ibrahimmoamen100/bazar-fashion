@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { STORAGE_KEYS } from '@/constants/store';
 
 interface UseFormPersistenceOptions {
   key: string;
@@ -11,13 +12,13 @@ export const useFormPersistence = <T extends Record<string, any>>(
   options: UseFormPersistenceOptions
 ) => {
   const { key, debounceMs = 1000, autoSave = true } = options;
-  const storageKey = `bazar_form_persistence_${key}`;
+  const storageKey = STORAGE_KEYS.formPersistence(key);
 
   // Load initial state from localStorage
   const loadPersistedState = useCallback((): T => {
     if (typeof window === 'undefined') return initialState;
     try {
-      const saved = localStorage.getItem(storageKey);
+      const saved = localStorage.getItem(storageKey) || localStorage.getItem(`bazar_form_persistence_${key}`);
       if (saved) {
         const parsed = JSON.parse(saved);
         console.log(`📝 FormPersistence: Loaded state for ${key}:`, parsed);
@@ -66,6 +67,7 @@ export const useFormPersistence = <T extends Record<string, any>>(
   const clearSavedState = useCallback(() => {
     try {
       localStorage.removeItem(storageKey);
+      localStorage.removeItem(`bazar_form_persistence_${key}`);
       setLastSaved(null);
       console.log(`📝 FormPersistence: Cleared saved state for ${key}`);
     } catch (error) {

@@ -2,9 +2,9 @@ import LocationsView from '@/views/Locations';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'فروعنا وعناويننا | بازار للموضه',
+  title: 'مقر المخزن الرئيسي ونقطة الاستلام | بازار فاشون',
   description:
-    'تعرف على عناوين فروع بازار للموضه ومواعيد العمل الرسمية للتواصل معنا أو زيارتنا لشراء الأجهزة ومستلزمات الكمبيوتر.',
+    'تعرف على عنوان مخزن بازار فاشون للأحذية والملابس العصرية في القاهرة، شارع مؤسسة الزكاة، مواعيد العمل الرسمية، وخدمات الشحن لجميع المحافظات.',
   alternates: {
     canonical: 'https://bazar-fashion.vercel.app/locations',
   },

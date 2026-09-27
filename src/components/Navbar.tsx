@@ -26,7 +26,7 @@ import { useTranslation } from "react-i18next";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { getTrackedOrders } from "@/utils/orderTracking";
 import { useState, useMemo, useRef, useEffect } from "react";
-import { STORE_LOGO_TEXT } from "@/constants/store";
+import { STORE_LOGO_TEXT, STORAGE_KEYS } from "@/constants/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { getCategorySlugFromName, getCategoryNameFromSlug } from "@/utils/category";
@@ -42,6 +42,7 @@ const bottomNavLinks = [
   { id: "categories", href: "/categories", icon: LayoutGrid, label: "الأقسام" },
   // { id: "shops", href: "/shops", icon: Store, label: "التجار" },
   { id: "about", href: "/about", icon: Info, label: "من نحن" },
+  { id: "locations", href: "/locations", icon: MapPin, label: "مقر المخزن" },
 ];
 
 export function Navbar() {
@@ -72,10 +73,10 @@ export function Navbar() {
       setTrackedOrdersCount(list.length);
     };
     updateCount();
-    window.addEventListener("bazar_tracked_orders_updated", updateCount);
+    window.addEventListener(STORAGE_KEYS.trackedOrdersEvent, updateCount);
     window.addEventListener("storage", updateCount);
     return () => {
-      window.removeEventListener("bazar_tracked_orders_updated", updateCount);
+      window.removeEventListener(STORAGE_KEYS.trackedOrdersEvent, updateCount);
       window.removeEventListener("storage", updateCount);
     };
   }, []);
@@ -945,7 +946,7 @@ function MobileMenu({
       <nav className="flex-1 overflow-y-auto py-5 px-4 space-y-2.5">
         {/* Mobile categories accordion */}
         <div className="mb-2">
-          {/* <button
+          <button
             onClick={() => setIsMobileCatOpen(!isMobileCatOpen)}
             className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold transition-all duration-200 border shadow-sm
               ${location.pathname.startsWith("/categories") || location.pathname.startsWith("/products")
@@ -962,7 +963,7 @@ function MobileMenu({
             <ChevronDown
               className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${isMobileCatOpen ? "rotate-180" : ""}`}
             />
-          </button> */}
+          </button>
 
           <AnimatePresence>
             {isMobileCatOpen && (

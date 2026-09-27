@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { STORAGE_KEYS } from '@/constants/store';
 
 interface Order {
   id: string;
@@ -74,7 +75,7 @@ export const useRevenue = () => {
   // Load sales from localStorage
   const loadSales = () => {
     try {
-      const savedSales = localStorage.getItem("bazar_cashier-sales");
+      const savedSales = localStorage.getItem(STORAGE_KEYS.cashierSales) || localStorage.getItem("bazar_cashier-sales");
       if (savedSales) {
         const parsedSales = JSON.parse(savedSales);
         const salesData = parsedSales.map((sale: any) => ({

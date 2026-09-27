@@ -1,6 +1,7 @@
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 import { Employee } from '@/types/attendance';
+import { STORAGE_KEYS } from '@/constants/store';
 
 export interface AttendanceSession {
   token: string;
@@ -12,7 +13,7 @@ export interface AttendanceSession {
 }
 
 class AttendanceAuthService {
-  private readonly SESSION_STORAGE_KEY = 'bazar_attendance_session_token';
+  private readonly SESSION_STORAGE_KEY = STORAGE_KEYS.attendanceSessionToken;
   private readonly SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
   private readonly ADMIN_PASSWORD = '4508'; // Fixed admin password
 

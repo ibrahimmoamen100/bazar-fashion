@@ -1,6 +1,7 @@
 import { db } from './firebase';
 import { doc, setDoc, getDoc, collection, query, where, getDocs, orderBy, limit, Timestamp, increment } from 'firebase/firestore';
 import { generateSlug } from '../utils/url';
+import { STORAGE_KEYS } from '@/constants/store';
 
 interface Order {
   id: string;
@@ -401,7 +402,7 @@ class Analytics {
       try {
         // First, check sessionStorage for current product (set by ProductDetails page)
         try {
-          const currentProductJson = sessionStorage.getItem('current_product');
+          const currentProductJson = sessionStorage.getItem(STORAGE_KEYS.currentProduct) || sessionStorage.getItem('current_product');
           if (currentProductJson) {
             const currentProduct = JSON.parse(currentProductJson);
             if (currentProduct) {
@@ -416,10 +417,14 @@ class Analytics {
 
         // Check zustand persist storage (default key is usually the store name)
         const possibleKeys = [
-          'shop-storage', // The actual store key
+          'bazar-fashion_shop-storage',
+          'bazar_shop-storage',
+          'shop-storage',
           'store-storage',
           'store',
           'products-store',
+          'bazar-fashion_local_products_fallback',
+          'bazar_local_products_fallback',
           'local_products_fallback',
           'compu-saif-store'
         ];
@@ -511,7 +516,7 @@ class Analytics {
   private async checkTrackingEnabled(): Promise<boolean> {
     try {
       if (typeof window !== 'undefined') {
-        const cached = sessionStorage.getItem('global_tracking_disabled');
+        const cached = sessionStorage.getItem(STORAGE_KEYS.globalTrackingDisabled) || sessionStorage.getItem('global_tracking_disabled');
         if (cached === 'true') return false;
         if (cached === 'false') return true;
       }
@@ -521,14 +526,14 @@ class Analytics {
       const isEnabled = configSnap.exists() ? configSnap.data()?.trackingEnabled !== false : true;
       
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('global_tracking_disabled', isEnabled ? 'false' : 'true');
+        sessionStorage.setItem(STORAGE_KEYS.globalTrackingDisabled, isEnabled ? 'false' : 'true');
       }
       return isEnabled;
     } catch (e: any) {
       console.warn('⚠️ [Analytics] Error checking tracking status:', e);
       // Disable tracking for current session on error (e.g. quota/network error)
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('global_tracking_disabled', 'true');
+        sessionStorage.setItem(STORAGE_KEYS.globalTrackingDisabled, 'true');
       }
       this.writesEnabled = false;
       return false;
@@ -544,8 +549,8 @@ class Analytics {
     const connectionInfo = this.getConnectionType();
 
     // Get demographics from localStorage (if set by user)
-    const storedAge = typeof window !== 'undefined' ? localStorage.getItem('bazar_user_age') : null;
-    const storedGender = typeof window !== 'undefined' ? localStorage.getItem('bazar_user_gender') : null;
+    const storedAge = typeof window !== 'undefined' ? (localStorage.getItem(STORAGE_KEYS.userAge) || localStorage.getItem('bazar_user_age')) : null;
+    const storedGender = typeof window !== 'undefined' ? (localStorage.getItem(STORAGE_KEYS.userGender) || localStorage.getItem('bazar_user_gender')) : null;
     const age = storedAge ? parseInt(storedAge) : undefined;
     const ageGroup = this.getAgeGroup(age);
     const gender = storedGender ? (storedGender as 'male' | 'female' | 'not_specified') : 'not_specified';
@@ -662,15 +667,15 @@ class Analytics {
     const productName = productNameOverride || this.extractProductNameFromUrl(page);
 
     // Get demographics from localStorage (if set by user)
-    const storedAge = typeof window !== 'undefined' ? localStorage.getItem('bazar_user_age') : null;
-    const storedGender = typeof window !== 'undefined' ? localStorage.getItem('bazar_user_gender') : null;
+    const storedAge = typeof window !== 'undefined' ? (localStorage.getItem(STORAGE_KEYS.userAge) || localStorage.getItem('bazar_user_age')) : null;
+    const storedGender = typeof window !== 'undefined' ? (localStorage.getItem(STORAGE_KEYS.userGender) || localStorage.getItem('bazar_user_gender')) : null;
     const age = storedAge ? parseInt(storedAge) : undefined;
     const ageGroup = this.getAgeGroup(age);
     const gender = storedGender ? (storedGender as 'male' | 'female' | 'not_specified') : 'not_specified';
 
     // Get previous page from sessionStorage
-    const previousPage = typeof window !== 'undefined' ? sessionStorage.getItem('last_page') || undefined : undefined;
-    if (typeof window !== 'undefined') sessionStorage.setItem('last_page', page);
+    const previousPage = typeof window !== 'undefined' ? (sessionStorage.getItem(STORAGE_KEYS.lastPage) || sessionStorage.getItem('last_page') || undefined) : undefined;
+    if (typeof window !== 'undefined') sessionStorage.setItem(STORAGE_KEYS.lastPage, page);
 
     const pageView: PageView = {
       id: `${this.sessionId}-${Date.now()}`,
@@ -685,8 +690,8 @@ class Analytics {
       osVersion: this.getOSVersion(),
       screenResolution: typeof screen !== 'undefined' ? `${screen.width}x${screen.height}` : 'Unknown',
       timeOnPage,
-      isNewVisitor: typeof window !== 'undefined' ? !localStorage.getItem('bazar_returning_visitor') : true,
-      isReturningVisitor: typeof window !== 'undefined' ? !!localStorage.getItem('bazar_returning_visitor') : false,
+      isNewVisitor: typeof window !== 'undefined' ? !(localStorage.getItem(STORAGE_KEYS.returningVisitor) || localStorage.getItem('bazar_returning_visitor')) : true,
+      isReturningVisitor: typeof window !== 'undefined' ? !!(localStorage.getItem(STORAGE_KEYS.returningVisitor) || localStorage.getItem('bazar_returning_visitor')) : false,
       // Enhanced data
       age,
       ageGroup,
@@ -712,8 +717,8 @@ class Analytics {
     );
 
     // Mark as returning visitor
-    if (typeof window !== 'undefined' && !localStorage.getItem('bazar_returning_visitor')) {
-      localStorage.setItem('bazar_returning_visitor', 'true');
+    if (typeof window !== 'undefined' && !(localStorage.getItem(STORAGE_KEYS.returningVisitor) || localStorage.getItem('bazar_returning_visitor'))) {
+      localStorage.setItem(STORAGE_KEYS.returningVisitor, 'true');
     }
 
     try {
@@ -745,7 +750,7 @@ class Analytics {
 
       // Store page view ID for later updates (scroll depth, interactions)
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('last_page_view_id', pageView.id);
+        sessionStorage.setItem(STORAGE_KEYS.lastPageViewId, pageView.id);
       }
 
       // Update session
@@ -810,7 +815,7 @@ class Analytics {
         console.warn('⚠️ [Analytics] Disabling writes due to permission / quota error');
         this.writesEnabled = false;
         if (typeof window !== 'undefined') {
-          sessionStorage.setItem('global_tracking_disabled', 'true');
+          sessionStorage.setItem(STORAGE_KEYS.globalTrackingDisabled, 'true');
         }
       }
     }
@@ -837,7 +842,7 @@ class Analytics {
   trackScrollDepth(depth: number): void {
     if (typeof window === 'undefined') return;
     const currentPage = window.location.pathname;
-    sessionStorage.setItem(`scroll_depth_${currentPage}`, depth.toString());
+    sessionStorage.setItem(STORAGE_KEYS.scrollDepth(currentPage), depth.toString());
   }
 
   // Track page interaction
@@ -862,7 +867,7 @@ class Analytics {
       await setDoc(doc(db, 'page_interactions', pageViewId), cleanInteractionData);
 
       // Update the last page view with interaction
-      const lastPageView = sessionStorage.getItem('last_page_view_id');
+      const lastPageView = sessionStorage.getItem(STORAGE_KEYS.lastPageViewId) || sessionStorage.getItem('last_page_view_id');
       if (lastPageView) {
         const pageViewRef = doc(db, 'page_views', lastPageView);
         const pageViewData = await getDoc(pageViewRef);

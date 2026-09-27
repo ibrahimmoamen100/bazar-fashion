@@ -136,6 +136,7 @@ const ProfitAnalysis = () => {
       toast.loading("جاري حذف بيانات الأرباح...", { id: 'delete-profit' });
       try {
         await clearAllProfitData();
+        localStorage.removeItem('bazar-fashion_cashier-sales');
         localStorage.removeItem('bazar_cashier-sales');
         toast.success("تم حذف جميع البيانات بنجاح", { id: 'delete-profit' });
         setTimeout(() => window.location.reload(), 1500);
