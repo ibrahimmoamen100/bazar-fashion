@@ -10,7 +10,7 @@ interface SitemapUrl {
 }
 
 export async function generateSitemap(): Promise<string> {
-    const baseUrl = 'https://compu-saif.vercel.app';
+    const baseUrl = 'https://bazar-fashion.vercel.app';
     const urls: SitemapUrl[] = [];
 
     // Static pages

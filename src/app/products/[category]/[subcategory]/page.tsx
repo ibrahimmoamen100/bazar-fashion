@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import ProductsView from '@/views/Products';
 import { productsService } from '@/lib/firebase';
 import { getCategoryNameFromSlug } from '@/utils/category';
@@ -44,10 +45,12 @@ export default async function ProductsByCategoryAndSubcategory({ params }: PageP
   }
 
   return (
-    <ProductsView
-      initialProducts={products}
-      initialCategory={decodedCategory}
-      initialSubcategory={decodedSubcategory}
-    />
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}>
+      <ProductsView
+        initialProducts={products}
+        initialCategory={decodedCategory}
+        initialSubcategory={decodedSubcategory}
+      />
+    </Suspense>
   );
 }

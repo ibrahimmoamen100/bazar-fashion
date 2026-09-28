@@ -62,7 +62,11 @@ export function useLocation() {
 
 // ─── useSearchParams ──────────────────────────────────────────────────────────
 // Returns [ReadonlyURLSearchParams, setSearchParams] matching react-router-dom API
+// NOTE: This hook requires a <Suspense> boundary in Next.js App Router.
+// If called outside Suspense, it returns an empty URLSearchParams as a safe fallback.
 export function useSearchParams() {
+  // nextUseSearchParams() throws a special promise (Suspense signal) when no boundary exists.
+  // We wrap it safely: components using this MUST be inside a <Suspense> wrapper.
   const searchParams = nextUseSearchParams();
   const router = useRouter();
   const pathname = usePathname();

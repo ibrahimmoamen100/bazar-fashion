@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { migrateLocalStorageKeys } from '@/utils/migrateLocalStorage';
 import { HelmetProvider } from 'react-helmet-async';
 // تهيئة i18next — يجب أن يكون أول import حتى تعمل الترجمة في جميع المكونات
@@ -35,21 +35,26 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     migrateLocalStorageKeys();
   }, []);
+
   return (
-    <I18nextProvider i18n={i18n}>
-      <HelmetProvider>
-        <QueryClientProvider client={queryClient}>
-          <SiteSettingsProvider>
-            <AuthProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                {children}
-              </TooltipProvider>
-            </AuthProvider>
-          </SiteSettingsProvider>
-        </QueryClientProvider>
-      </HelmetProvider>
-    </I18nextProvider>
+    // Suspense boundary is REQUIRED for any child using useSearchParams() from next/navigation.
+    // Without this, Next.js throws during SSR/static generation on devices without a JS cache.
+    <Suspense fallback={null}>
+      <I18nextProvider i18n={i18n}>
+        <HelmetProvider>
+          <QueryClientProvider client={queryClient}>
+            <SiteSettingsProvider>
+              <AuthProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  {children}
+                </TooltipProvider>
+              </AuthProvider>
+            </SiteSettingsProvider>
+          </QueryClientProvider>
+        </HelmetProvider>
+      </I18nextProvider>
+    </Suspense>
   );
 }

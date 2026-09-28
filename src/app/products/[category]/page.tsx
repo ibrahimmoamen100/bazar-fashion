@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import ProductsView from '@/views/Products';
 import { productsService } from '@/lib/firebase';
 import { getCategoryNameFromSlug } from '@/utils/category';
@@ -37,5 +38,9 @@ export default async function ProductsByCategory({ params }: PageProps) {
     console.error('Failed to fetch products for SSR category page:', error);
   }
 
-  return <ProductsView initialProducts={products} initialCategory={decodedCategory} />;
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}>
+      <ProductsView initialProducts={products} initialCategory={decodedCategory} />
+    </Suspense>
+  );
 }

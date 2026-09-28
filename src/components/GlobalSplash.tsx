@@ -54,25 +54,27 @@ function preloadImage(url: string) {
 }
 
 // ─── Particle helpers ─────────────────────────────────────────────────────────
+// Pre-generate stable particle data to avoid Math.random() in render (hydration mismatch)
+const PARTICLE_DATA = Array.from({ length: 22 }, (_, i) => ({
+  size: 4 + ((i * 7 + 3) % 9),         // deterministic size 4–12
+  x: (i * 4.55 + 2) % 100,             // deterministic x 0–100
+  delay: (i * 0.09) % 2,               // deterministic delay 0–2
+  dur: 2.5 + (i * 0.09) % 2,           // deterministic duration 2.5–4.5
+  yEnd: -(400 + (i * 13) % 300),       // deterministic y offset
+}));
+
 function Particles({ color }: { color: string }) {
-  const particles = Array.from({ length: 22 }, (_, i) => i);
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((i) => {
-        const size = 4 + Math.random() * 8;
-        const x = Math.random() * 100;
-        const delay = Math.random() * 2;
-        const dur = 2.5 + Math.random() * 2;
-        return (
-          <motion.div
-            key={i}
-            className="absolute rounded-full"
-            style={{ width: size, height: size, left: `${x}%`, bottom: '-20px', background: color, opacity: 0.5 } as React.CSSProperties}
-            animate={{ y: [0, -(400 + Math.random() * 300)], opacity: [0.5, 0] }}
-            transition={{ duration: dur, delay, repeat: Infinity, ease: 'easeOut' }}
-          />
-        );
-      })}
+      {PARTICLE_DATA.map((p, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full"
+          style={{ width: p.size, height: p.size, left: `${p.x}%`, bottom: '-20px', background: color, opacity: 0.5 } as React.CSSProperties}
+          animate={{ y: [0, p.yEnd], opacity: [0.5, 0] }}
+          transition={{ duration: p.dur, delay: p.delay, repeat: Infinity, ease: 'easeOut' }}
+        />
+      ))}
     </div>
   );
 }
