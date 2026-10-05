@@ -64,22 +64,26 @@ export const getProductUrl = (
   name?: string,
   category?: string,
   _subcategoryOrSupplier?: string,
-  _supplierNameOrSlug?: string
+  _supplierNameOrSlug?: string,
+  slug?: string
 ): string => {
   let prodName = name || '';
   let prodCat = category || '';
   let prodId = '';
+  let prodSlug = slug || '';
 
   if (typeof idOrProduct === 'object' && idOrProduct !== null) {
     const p = idOrProduct;
     prodId = p.id || '';
     prodName = p.name || '';
     prodCat = p.category || p.categorySlug || '';
+    prodSlug = p.slug || prodSlug;
   } else {
     prodId = idOrProduct || '';
   }
 
-  const pSlug = generateSlug(prodName) || prodId;
+  const cleanSlug = prodSlug?.trim() ? generateSlug(prodSlug.trim()) : '';
+  const pSlug = cleanSlug || generateSlug(prodName) || prodId;
   const catSlug = prodCat ? getCategorySlugFromName(prodCat) : "general";
 
   return `/product/${catSlug}/${pSlug}`;

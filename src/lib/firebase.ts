@@ -501,22 +501,27 @@ export class FirebaseProductsService {
       Object.entries(normalizedProduct).filter(([_, value]) => value !== undefined)
     );
 
-    // Build slug from product name and ensure uniqueness
-    const baseSlug = this.slugifyProductName((cleanProduct as any).name || 'product');
+    // Build slug from user provided slug or product name, and ensure uniqueness
+    const userSlug = (cleanProduct as any).slug?.trim();
+    const baseSlug = userSlug
+      ? this.slugifyProductName(userSlug)
+      : this.slugifyProductName((cleanProduct as any).name || 'product');
 
     // Try Firebase first
     try {
       const productsRef = collection(db, this.collectionName);
 
+      const uniqueSlug = await this.ensureUniqueSlug(baseSlug);
+      const finalProductSlug = userSlug ? this.slugifyProductName(userSlug) : uniqueSlug;
+
       // Convert dates to Firestore Timestamps
       const productData = {
         ...cleanProduct,
+        slug: finalProductSlug,
         createdAt: (cleanProduct as any).createdAt ? Timestamp.fromDate(new Date((cleanProduct as any).createdAt)) : Timestamp.now(),
         offerEndsAt: (cleanProduct as any).offerEndsAt ? Timestamp.fromDate(new Date((cleanProduct as any).offerEndsAt)) : null,
         expirationDate: (cleanProduct as any).expirationDate ? Timestamp.fromDate(new Date((cleanProduct as any).expirationDate)) : null,
       };
-
-      const uniqueSlug = await this.ensureUniqueSlug(baseSlug);
 
       // Create document with custom ID equal to the slug
       const docRef = doc(productsRef, uniqueSlug);
@@ -526,13 +531,14 @@ export class FirebaseProductsService {
 
       // Update Catalog Version Token for cache invalidation & ISR
       // Includes /categories so the category page also gets fresh ISR content
-      await this.updateCatalogVersion(['/', '/categories', `/product/${uniqueSlug}`]);
+      await this.updateCatalogVersion(['/', '/categories', `/product/${uniqueSlug}`, `/product/${finalProductSlug}`]);
 
       // Immediately bust client-side cache so admin sees the new product right away
       this.invalidateProductsCache();
 
       return {
         ...(cleanProduct as any),
+        slug: finalProductSlug,
         createdAt: (cleanProduct as any).createdAt || new Date().toISOString(),
         id: uniqueSlug,
       } as Product;
@@ -542,8 +548,10 @@ export class FirebaseProductsService {
       // Fallback to localStorage
       try {
         const uniqueSlug = baseSlug + '-' + Date.now();
+        const finalProductSlug = userSlug ? this.slugifyProductName(userSlug) : uniqueSlug;
         const productWithId = {
           ...(cleanProduct as any),
+          slug: finalProductSlug,
           createdAt: (cleanProduct as any).createdAt || new Date().toISOString(),
           id: uniqueSlug,
         } as Product;
@@ -593,13 +601,21 @@ export class FirebaseProductsService {
       if ((cleanProduct as any).expirationDate) {
         updateData.expirationDate = Timestamp.fromDate(new Date((cleanProduct as any).expirationDate));
       }
+      if ((cleanProduct as any).slug !== undefined) {
+        const rawSlug = (cleanProduct as any).slug;
+        updateData.slug = rawSlug && String(rawSlug).trim() ? this.slugifyProductName(String(rawSlug).trim()) : '';
+      }
 
       console.log(`Firebase: Final update data:`, updateData);
       await updateDoc(docRef, updateData);
       console.log(`Firebase: Document updated successfully`);
 
       // Update Catalog Version Token for cache invalidation & ISR
-      await this.updateCatalogVersion(['/', '/categories', `/product/${id}`]);
+      const isrPaths = ['/', '/categories', `/product/${id}`];
+      if (updateData.slug) {
+        isrPaths.push(`/product/${updateData.slug}`);
+      }
+      await this.updateCatalogVersion(isrPaths);
 
       // Immediately bust client-side cache
       this.invalidateProductsCache();

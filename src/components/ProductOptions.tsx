@@ -336,39 +336,27 @@ export function ProductOptions({
     <div className="space-y-8">
       {/* Sizes Section */}
       {hasSizes && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div>
-              <h3 className="text-sm tracking-widest uppercase font-bold text-gray-400">الأحجام</h3>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
+        <div className="space-y-3">
+          <h3 className="text-sm tracking-widest uppercase font-bold text-gray-400">الأحجام</h3>
+          <div className="flex flex-wrap gap-2.5">
             {product.sizes!.map((size) => (
               <button
                 key={size.id}
                 onClick={() => handleSizeChange(size.id)}
-                className={`relative group p-4 rounded-xl border transition-all duration-200 ${selectedSizeId === size.id
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
+                className={`group flex flex-col items-center gap-1 px-4 py-2.5 rounded-xl border-2 transition-all duration-200 ${
+                  selectedSizeId === size.id
+                    ? 'border-primary bg-primary/5 shadow-sm'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 bg-white'
+                }`}
               >
-                <div className="flex items-start gap-3">
-                  <div className={`shrink-0 w-5 h-5 mt-0.5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${selectedSizeId === size.id
-                    ? 'border-primary bg-primary'
-                    : 'border-gray-300 bg-white'
-                    }`}>
-                    {selectedSizeId === size.id && (
-                      <div className="w-2 h-2 rounded-full bg-white" />
-                    )}
-                  </div>
-                  <div className="text-right flex-1">
-                    <div className="font-bold text-gray-900 text-sm leading-relaxed">{size.label}</div>
-                    <div className={`font-black text-base mt-1 inline-block px-3 py-1 rounded-lg ${size.price === 0 || size.price === product.price ? 'text-primary/80 bg-primary/5 border border-primary/20 text-sm' : 'text-primary bg-primary/10'}`}>
-                      {size.price === 0 || size.price === product.price ? 'الأساسي' : formatCurrency(size.price, 'جنيه')}
-                    </div>
-                  </div>
-                </div>
+                <span className={`font-bold text-sm leading-tight ${
+                  selectedSizeId === size.id ? 'text-primary' : 'text-gray-800'
+                }`}>{size.label}</span>
+                <span className={`text-xs font-semibold ${
+                  selectedSizeId === size.id ? 'text-primary/80' : 'text-gray-400'
+                }`}>
+                  {size.price === 0 || size.price === product.price ? 'الأساسي' : formatCurrency(size.price, 'جنيه')}
+                </span>
               </button>
             ))}
           </div>
@@ -377,51 +365,35 @@ export function ProductOptions({
 
       {/* Custom Option Groups Section */}
       {hasCustomOptionGroups && (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {product.customOptionGroups!.map((group) => (
-            <div key={group.id} className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div>
-                  <h3 className="text-sm tracking-widest uppercase font-bold text-gray-400">{group.name}</h3>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3">
+            <div key={group.id} className="space-y-3">
+              <h3 className="text-sm tracking-widest uppercase font-bold text-gray-400">{group.name}</h3>
+              <div className="flex flex-wrap gap-2.5">
                 {group.options.map((option) => {
                   const isSelected = selectedCustomOptionIds[group.id] === option.id;
                   return (
                     <button
                       key={option.id}
                       onClick={() => setSelectedCustomOptionIds(prev => ({ ...prev, [group.id]: option.id }))}
-                      className={`relative group p-4 rounded-xl border transition-all duration-200 ${isSelected
-                        ? 'border-primary bg-primary/5 shadow-sm'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
+                      className={`group flex flex-col items-center gap-1 px-4 py-2.5 rounded-xl border-2 transition-all duration-200 ${
+                        isSelected
+                          ? 'border-primary bg-primary/5 shadow-sm'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 bg-white'
+                      }`}
                     >
-                      <div className="flex items-start justify-between gap-3 w-full">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <div className={`shrink-0 w-5 h-5 mt-0.5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${isSelected
-                            ? 'border-primary bg-primary'
-                            : 'border-gray-300 bg-white'
-                            }`}>
-                            {isSelected && (
-                              <div className="w-2 h-2 rounded-full bg-white" />
-                            )}
-                          </div>
-                          <div className="text-right flex-1 min-w-0">
-                            <div className="font-bold text-gray-900 leading-relaxed break-words">{option.label}</div>
-                          </div>
-                        </div>
-                        {option.extraPrice > 0 ? (
-                          <div className="shrink-0 font-black text-primary bg-primary/10 inline-block px-3 py-1 rounded-lg text-sm whitespace-nowrap">
-                            +{formatCurrency(option.extraPrice, 'جنيه')}
-                          </div>
-                        ) : (
-                          <div className="shrink-0 font-bold text-primary/80 bg-primary/5 border border-primary/20 inline-block px-3 py-1 rounded-lg text-xs whitespace-nowrap">
-                            الأساسي
-                          </div>
-                        )}
-                      </div>
+                      <span className={`font-bold text-sm leading-tight break-all ${
+                        isSelected ? 'text-primary' : 'text-gray-800'
+                      }`}>{option.label}</span>
+                      {option.extraPrice > 0 ? (
+                        <span className={`text-xs font-semibold ${
+                          isSelected ? 'text-primary/80' : 'text-gray-400'
+                        }`}>+{formatCurrency(option.extraPrice, 'جنيه')}</span>
+                      ) : (
+                        <span className={`text-xs font-semibold ${
+                          isSelected ? 'text-primary/70' : 'text-gray-400'
+                        }`}>الأساسي</span>
+                      )}
                     </button>
                   );
                 })}

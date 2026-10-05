@@ -37,11 +37,13 @@ async function fetchProductServerSide(productSlug: string) {
       product = allProducts.find((p: any) =>
         p.id === productSlug ||
         p.id === actualId ||
+        p.slug === productSlug ||
+        p.slug === actualId ||
+        (p.slug && generateSlug(p.slug) === productSlug) ||
         generateSlug(p.name) === productSlug ||
         generateSlug(p.name) === actualId ||
         normSlug(p.id) === normId ||
-        normSlug(p.id) === normActual ||
-        (p as any).slug === productSlug
+        normSlug(p.id) === normActual
       ) ?? null;
     }
 
@@ -66,7 +68,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const catSlug = product.categorySlug || getCategorySlugFromName(product.category) || category || 'general';
-  const prodSlug = generateSlug(product.name) || product.id;
+  const prodSlug = product.slug || generateSlug(product.name) || product.id;
   const storeName = product.wholesaleInfo?.supplierName || 'بازار للموضه';
   const pageTitle = `${product.name} | ${storeName}`;
   const pageDesc = product.description || 'تصفح أحدث الأجهزة والمنتجات بأفضل الأسعار.';
@@ -102,7 +104,7 @@ export default async function ShopProductDetailsOrSubcategoryPage({ params }: Pa
 
   if (product) {
     const catSlug = product.categorySlug || getCategorySlugFromName(product.category) || category || 'general';
-    const prodSlug = generateSlug(product.name) || product.id;
+    const prodSlug = product.slug || generateSlug(product.name) || product.id;
     // Permanent/Clean redirect to modern, canonical product URL
     redirect(`/product/${catSlug}/${prodSlug}`);
   }

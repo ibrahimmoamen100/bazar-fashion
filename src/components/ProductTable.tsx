@@ -2,6 +2,7 @@
 
 import { Product } from "@/types/product";
 import { copyToClipboard } from '@/utils/clipboard';
+import { getProductUrl } from "@/utils/url";
 import {
   Table,
   TableBody,
@@ -28,6 +29,7 @@ import {
   ArrowDownToLine,
   Archive,
   ArchiveRestore,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -380,7 +382,19 @@ export function ProductTable({
                     </div>
                     <div className="flex flex-col">
                       <span className="font-medium">{product.name}</span>
-                      <span className="text-xs text-muted-foreground">
+                      {product.slug && (
+                        <a
+                          href={getProductUrl(product)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] font-mono text-primary/80 hover:text-primary hover:underline flex items-center gap-1 dir-ltr w-fit mt-0.5"
+                          title="عرض المنتج في الموقع"
+                        >
+                          <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                          <span>/{product.slug}</span>
+                        </a>
+                      )}
+                      <span className="text-xs text-muted-foreground mt-0.5">
                         {(product.description?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || '').slice(0, 50)}{product.description ? '...' : ''}
                       </span>
                     </div>

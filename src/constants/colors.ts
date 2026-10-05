@@ -39,7 +39,10 @@ export const commonColors = [
   { name: "وردي داكن", value: "#FF1493", category: "purple" },
   { name: "وردي فاتح", value: "#FFB6C1", category: "purple" },
   
-  // Fashion Colors
+  // Fashion & Popular Colors
+  { name: "كحلي", value: "#1B2A4A", category: "cool" },
+  { name: "هافان", value: "#965A3E", category: "warm" },
+  { name: "لبني", value: "#89CFF0", category: "cool" },
   { name: "ذهبي", value: "#FFD700", category: "fashion" },
   { name: "فضي", value: "#C0C0C0", category: "fashion" },
   { name: "برونزي", value: "#CD7F32", category: "fashion" },
@@ -61,11 +64,16 @@ export const colorCategories = {
   fashion: "ألوان الموضة"
 };
 
-// Helper function to get color by value
+// Helper function to get color by value or name
 export const getColorByName = (value: string) => {
-  return commonColors.find(color => color.value === value) || {
-    name: value,
-    value: value,
+  if (!value) return { name: '', value: '', category: 'unknown' };
+  const clean = value.trim();
+  return commonColors.find(color => 
+    color.value.toLowerCase() === clean.toLowerCase() || 
+    color.name.trim() === clean
+  ) || {
+    name: clean,
+    value: clean,
     category: "unknown"
   };
 };

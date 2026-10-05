@@ -115,8 +115,14 @@ async function fetchProductServerSide(slugArr: string[] | undefined) {
       const pSlug = p.slug;
       if (!pSlug) return false;
       const decSlug = safeDecode(pSlug);
+      const cleanSlug = generateSlug(pSlug);
       return candidates.some(
-        (c) => pSlug === c || decSlug === c || pSlug.toLowerCase() === c.toLowerCase()
+        (c) =>
+          pSlug === c ||
+          decSlug === c ||
+          cleanSlug === c ||
+          pSlug.toLowerCase() === c.toLowerCase() ||
+          cleanSlug.toLowerCase() === c.toLowerCase()
       );
     });
     if (match) return match;

@@ -233,9 +233,22 @@ const ProductDetails = ({ initialProduct }: ProductDetailsProps) => {
     (p as any).slug === id ||
     (p as any).slug === rawId ||
     (p as any).slug === actualId ||
+    ((p as any).slug && generateSlug((p as any).slug) === id) ||
+    ((p as any).slug && generateSlug((p as any).slug) === rawId) ||
+    ((p as any).slug && generateSlug((p as any).slug) === actualId) ||
+    (normTarget && (p as any).slug && String((p as any).slug).toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]/g, '') === normTarget) ||
     (normTarget && (p.name || '').toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]/g, '') === normTarget) ||
     (normTarget && (p.id || '').toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]/g, '') === normTarget)
   ) || initialProduct;
+
+  // Smoothly normalize and update browser URL to canonical slug if accessed via raw ID or old name slug
+  useEffect(() => {
+    if (!product || typeof window === 'undefined') return;
+    const currentCanonicalPath = getProductUrl(product);
+    if (window.location.pathname.startsWith('/product/') && window.location.pathname !== currentCanonicalPath) {
+      window.history.replaceState(null, '', currentCanonicalPath + window.location.search);
+    }
+  }, [product]);
 
   // Track active suppliers to know if product's merchant is currently archived
   const [activeSuppliersList, setActiveSuppliersList] = useState<CachedSupplier[]>([]);

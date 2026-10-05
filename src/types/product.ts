@@ -42,6 +42,7 @@ export const ProductSpecificationSchema = z.object({
 export const ProductSchema = z.object({
   id: z.string(),
   name: z.string(),
+  slug: z.string().optional(),
   brand: z.string(),
   price: z.number(), // Base price when no sizes are defined
   category: z.string(),
@@ -49,6 +50,7 @@ export const ProductSchema = z.object({
   categorySlug: z.string().optional(),
   subcategorySlug: z.string().optional(),
   brandSlug: z.string().optional(),
+  supplierSlug: z.string().optional(),
   merchant: z.string().optional(),
   color: z.string(),
   size: z.string(),

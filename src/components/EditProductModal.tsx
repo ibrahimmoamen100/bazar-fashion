@@ -26,7 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store/useStore";
 import { useTranslation } from "react-i18next";
-import { slugifySupplier } from "@/utils/url";
+import { slugifySupplier, generateSlug } from "@/utils/url";
 import {
   Dialog,
   DialogContent,
@@ -485,6 +485,7 @@ export function EditProductModal({
 
       setFormData({
         ...product,
+        slug: product.slug || (product.name ? generateSlug(product.name) : product.id) || "",
         sizes: normalizedSizes,
         customOptionGroups: product.customOptionGroups || [],
         specifications: orderedSpecs,
@@ -718,8 +719,13 @@ export function EditProductModal({
             }))
         }));
 
+      const finalSlug = formData.slug && String(formData.slug).trim()
+        ? generateSlug(String(formData.slug).trim())
+        : (formData.name ? generateSlug(formData.name) : product?.id);
+
       const updatedProduct = {
         ...formData,
+        slug: finalSlug,
         brand: finalBrand,
         category: finalCategory,
         subcategory: finalSubcategory,
@@ -805,6 +811,60 @@ export function EditProductModal({
                   )}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Custom Product URL Slug Field */}
+          <div className="space-y-1.5 p-3.5 rounded-lg border bg-muted/20 border-dashed">
+            <div className="flex items-center justify-between">
+              <label htmlFor="edit-product-slug" className="text-sm font-medium flex items-center gap-1.5 cursor-pointer">
+                <span>مسار الرابط (URL Slug)</span>
+                <span className="text-xs text-muted-foreground font-normal">(مستقل عن اسم المنتج في الرابط)</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const autoSlug = generateSlug(formData.name || "");
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    slug: autoSlug,
+                  }));
+                  toast.info("تم توليد الرابط تلقائياً من اسم المنتج");
+                }}
+                className="text-xs text-primary hover:underline font-medium"
+              >
+                إعادة توليد من الاسم
+              </button>
+            </div>
+            <Input
+              id="edit-product-slug"
+              name="slug"
+              dir="ltr"
+              placeholder="مثال: dell-inspiron-15-intel-core-i5"
+              value={formData.slug || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, slug: e.target.value })
+              }
+              onBlur={() => {
+                if (formData.slug && String(formData.slug).trim()) {
+                  setFormData({
+                    ...formData,
+                    slug: generateSlug(String(formData.slug).trim()),
+                  });
+                }
+              }}
+              className="font-mono text-xs bg-background"
+            />
+            <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground gap-1 pt-0.5">
+              <span className="truncate">
+                معاينة مسار الرابط:{" "}
+                <code className="text-primary font-mono text-[11px] bg-primary/10 px-1.5 py-0.5 rounded dir-ltr inline-block font-semibold">
+                  /product/{formData.category || 'category'}/{formData.slug?.trim() ? generateSlug(formData.slug.trim()) : (formData.name ? generateSlug(formData.name) : 'product-slug')}
+                </code>
+              </span>
+              <span className="text-[11px] text-muted-foreground/80 shrink-0">
+                يسمح بالحروف الإنجليزية/العربية، الأرقام والشرطات (-)
+              </span>
             </div>
           </div>
 

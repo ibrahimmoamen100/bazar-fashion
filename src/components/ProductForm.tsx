@@ -41,7 +41,7 @@ import { useStore } from "@/store/useStore";
 import { Calendar as CalendarIconAr } from "lucide-react";
 import { ar } from "date-fns/locale";
 import { formatPrice } from "@/utils/format";
-import { slugifySupplier } from "@/utils/url";
+import { slugifySupplier, generateSlug } from "@/utils/url";
 import dynamic from "next/dynamic";
 const ReactQuill = dynamic(() => import("react-quill-new"), {
   ssr: false,
@@ -194,6 +194,8 @@ export function ProductForm({ onSubmit }: ProductFormProps) {
   const initialFormState = {
     id: crypto.randomUUID(),
     name: "",
+    slug: "",
+    isSlugCustomized: false,
     brand: "",
     price: "",
     category: "",
@@ -715,8 +717,13 @@ export function ProductForm({ onSubmit }: ProductFormProps) {
         ...processedSpecifications.filter(s => s.key !== "الفئة" && s.key !== "الفئة الفرعية" && s.key !== "العلامة التجارية")
       ];
 
+      const finalSlug = formData.slug?.trim()
+        ? generateSlug(formData.slug.trim())
+        : (generateSlug(formData.name) || undefined);
+
       const product = {
         ...formData,
+        slug: finalSlug,
         brand: finalBrand,
         subcategory: finalSubcategory,
         category: finalCategory,
@@ -765,8 +772,8 @@ export function ProductForm({ onSubmit }: ProductFormProps) {
         videoUrls: formData.videoUrls || [],
       };
 
-      // Remove id from product data since Firebase will generate it
-      const { id, ...productData } = product;
+      // Remove id and helper fields from product data since Firebase will generate it
+      const { id, isSlugCustomized, ...productData } = product;
 
       // Update the store using Firebase
       await onSubmit(productData as any);
@@ -849,8 +856,16 @@ export function ProductForm({ onSubmit }: ProductFormProps) {
                   id="product-name"
                   name="name"
                   required
+                  placeholder="مثال: لابتوب ديل انسبيرون 15"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      name: newName,
+                      slug: prev.isSlugCustomized ? prev.slug : generateSlug(newName),
+                    }));
+                  }}
                 />
               </div>
               <div>
@@ -872,6 +887,66 @@ export function ProductForm({ onSubmit }: ProductFormProps) {
                     {formatPrice(Number(formData.price))} جنيه
                   </p>
                 )}
+              </div>
+            </div>
+
+            {/* Custom Product URL Slug Field */}
+            <div className="space-y-1.5 p-3.5 rounded-lg border bg-muted/20 border-dashed">
+              <div className="flex items-center justify-between">
+                <label htmlFor="product-slug" className="text-sm font-medium flex items-center gap-1.5 cursor-pointer">
+                  <span>مسار الرابط (URL Slug)</span>
+                  <span className="text-xs text-muted-foreground font-normal">(مستقل عن اسم المنتج في الرابط)</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const autoSlug = generateSlug(formData.name || "");
+                    setFormData(prev => ({
+                      ...prev,
+                      slug: autoSlug,
+                      isSlugCustomized: false,
+                    }));
+                    toast.info("تم توليد الرابط تلقائياً من اسم المنتج");
+                  }}
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  إعادة توليد من الاسم
+                </button>
+              </div>
+              <Input
+                id="product-slug"
+                name="slug"
+                dir="ltr"
+                placeholder="مثال: dell-inspiron-15-intel-core-i5"
+                value={formData.slug || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData(prev => ({
+                    ...prev,
+                    slug: val,
+                    isSlugCustomized: true,
+                  }));
+                }}
+                onBlur={() => {
+                  if (formData.slug && formData.slug.trim()) {
+                    setFormData(prev => ({
+                      ...prev,
+                      slug: generateSlug(prev.slug.trim()),
+                    }));
+                  }
+                }}
+                className="font-mono text-xs bg-background"
+              />
+              <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground gap-1 pt-0.5">
+                <span className="truncate">
+                  معاينة مسار الرابط:{" "}
+                  <code className="text-primary font-mono text-[11px] bg-primary/10 px-1.5 py-0.5 rounded dir-ltr inline-block font-semibold">
+                    /product/{formData.category || 'category'}/{formData.slug?.trim() ? generateSlug(formData.slug.trim()) : (formData.name ? generateSlug(formData.name) : 'product-slug')}
+                  </code>
+                </span>
+                <span className="text-[11px] text-muted-foreground/80 shrink-0">
+                  يسمح بالحروف الإنجليزية/العربية، الأرقام والشرطات (-)
+                </span>
               </div>
             </div>
 
